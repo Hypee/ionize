@@ -41,16 +41,19 @@ class Page extends MY_admin
 	public function __construct()
 	{
 		parent::__construct();
-
+		
 		// Models
 		$this->load->model('menu_model', '', true);
 		$this->load->model('page_model', '', true);
 		$this->load->model('article_model', '', true);
 		$this->load->model('structure_model', '', true);
 		$this->load->model('extend_field_model', '', true);
+		$this->load->model('system_check_model', '', true);
 		
 		// Libraries
 		$this->load->library('structure');
+
+		$this->load->helper('string_helper');
 	}
 
 
@@ -75,15 +78,8 @@ class Page extends MY_admin
 		// Dropdown menus
 		$datas = $this->menu_model->get_select();
 		$this->template['menus'] =	form_dropdown('id_menu', $datas, $id_menu, 'id="id_menu" class="select"');
-
 		
-		// Dropdown parents
-//		$datas = $this->page_model->get_lang_list(array('id_menu' => '1'), Settings::get_lang('default'));
-//		$parents = array('0' => '/');
-//		($parents_array = $this->structure->get_parent_select($datas) ) ? $parents += $parents_array : '';
-//		$this->template['parents'] =	form_dropdown('id_parent', $parents, false, 'class="select" id="id_parent"');
 
-		
 		// Dropdowns Views : Get $view var from my_theme/config/views.php
 		if (is_file(APPPATH.'../themes/'.Settings::get('theme').'/config/views.php'))
 			require_once(APPPATH.'../themes/'.Settings::get('theme').'/config/views.php');
@@ -114,11 +110,7 @@ class Page extends MY_admin
 		 * Extend fields
 		 *
 		 */
-		$this->template['extend_fields'] = array();
-//		if (Settings::get('use_extend_fields') == '1')
-//		{
-			$this->template['extend_fields'] = $this->extend_field_model->get_element_extend_fields('page');
-//		}
+		$this->template['extend_fields'] = $this->extend_field_model->get_element_extend_fields('page');
 
 		$this->output('page');
 	}
@@ -153,8 +145,15 @@ class Page extends MY_admin
 			
 			// Dropdown menus
 			$datas = $this->menu_model->get_select();
-			$this->template['menus'] =	form_dropdown('id_menu', $datas, $this->template['id_menu'], 'id="id_menu" class="select"');
+			$this->template['menus'] = form_dropdown('id_menu', $datas, $this->template['id_menu'], 'id="id_menu" class="select"');
 			
+			// Subnav menu
+			$subnav_page = $this->page_model->get($page['id_subnav']);
+			$selected_subnav = ( ! empty($subnav_page['id_menu'])) ? $subnav_page['id_menu'] : '-1';
+			$this->template['subnav_menu'] = form_dropdown('id_subnav_menu', $datas, $selected_subnav, 'id="id_subnav_menu" class="select"');
+
+
+
 			// Dropdowns Views
 			if (is_file(APPPATH.'../themes/'.Settings::get('theme').'/config/views.php'))
 				require_once(APPPATH.'../themes/'.Settings::get('theme').'/config/views.php');
@@ -183,15 +182,6 @@ class Page extends MY_admin
 				$this->template['article_views'] = form_dropdown('article_view', $datas, $this->template['article_view'], 'class="select w160"');
 			}
 			
-			// All articles views to template
-//			$this->template['all_article_views'] = $datas;
-			
-			// All articles type to template
-//			$datas = $this->article_type_model->get_types_select();
-//			$datas = array('' => lang('ionize_select_no_type')) + $datas; 
-//			$this->template['all_article_types'] = $datas;
-
-			
 			/*
 			 * Groups access
 			 *
@@ -214,26 +204,13 @@ class Page extends MY_admin
 			 * Extend fields
 			 *
 			 */
-			$this->template['extend_fields'] = array();
-//			if (Settings::get('use_extend_fields') == '1')
-//			{
-				$this->template['extend_fields'] = $this->extend_field_model->get_element_extend_fields('page', $id);
-//			}
+			$this->template['extend_fields'] = $this->extend_field_model->get_element_extend_fields('page', $id);
 			
 			/*
 			 * Lang data
 			 */
 			$this->page_model->feed_lang_template($id, $this->template);
 			
-			/*
-			 * Linked articles
-			 */
-//			$articles = $this->article_model->get_lang_list(array('id_page'=>$id), Settings::get_lang('default'));
-			
-			// Add lang content to each article
-//			$this->article_model->add_lang_data($articles);
-			
-//			$this->template['articles'] = $articles;
 			
 			/*
 			 * Output the view
@@ -277,19 +254,26 @@ class Page extends MY_admin
 			}
 			else
 			{
+				// Clear the cache
+				Cache()->clear_cache();
+				
 				// Prepare data before save
 				$this->_prepare_data();
 	
-				// Save base datas
-				$this->id = $this->page_model->save($this->data, $this->lang_data);
+				// Save Page
+				$saved_id = $this->page_model->save($this->data, $this->lang_data);
 
 				// Correct DB integrity : links URL and names, childrens pages menus
 				if ( ! empty($id) )
+				{
 					$this->page_model->correct_integrity($this->data, $this->lang_data);
+					
+					// Correct pages levels regarding parents.
+					$this->system_check_model->check_page_level(TRUE);
+				}
 
 				// Save extends fields data
-//				if (Settings::get('use_extend_fields') == '1')
-					$this->extend_field_model->save_data('page', $this->id, $_POST);
+				$this->extend_field_model->save_data('page', $saved_id, $_POST);
 						
 				// Save linked access groups authorizations
 				// $this->base_model->join_items_keys_to('user_groups', $this->input->post('groups'), 'page', $this->id);
@@ -297,38 +281,39 @@ class Page extends MY_admin
 				// Save Home page
 				if ($this->data['home'] == '1')
 				{
-					$this->page_model->update_home_page($this->id);
+					$this->page_model->update_home_page($saved_id);
 				}
 
 
 				// Prepare the Json answer
-				$menu = $this->menu_model->get($this->data['id_menu']);
-				
-				$this->data = array_merge($this->lang_data[Settings::get_lang('default')], $this->data);
-				$this->data['title'] = htmlspecialchars_decode($this->data['title'], ENT_QUOTES);
-				$this->data['id_page'] = $this->id;
-				$this->data['element'] = 'page';
-				$this->data['menu'] = $menu;
-				$this->data['ordering'] = $this->input->post('ordering');
-				
+				$page = array_merge($this->lang_data[Settings::get_lang('default')], $this->page_model->get($saved_id));
+
+				$page['menu'] = $this->menu_model->get($page['id_menu']);
+
+				// Remove HTML tags from returned array
+				strip_html($page);
+
 				if ( empty($id))
 				{
+					// Used by JS Tree to detect if page in inserted in tree or not
+					$page['inserted'] = TRUE;
+					
 					$this->callback = array(
-						'fn' => $menu['name'].'Tree.insertTreePage',
-						'args' => $this->data
+						'fn' => $page['menu']['name'].'Tree.insertElement',
+						'args' => array($page, 'page')
 					);
 				}
 				else
 				{
 					$this->callback = array(
 						'fn' => 'ION.updateTreePage',
-						'args' => $this->data
+						'args' => $page
 					);
 				}				
 
 				$this->update[] = array(
 					'element' => 'mainPanel',
-					'url' => admin_url() . 'page/edit/'.$this->id,
+					'url' => admin_url() . 'page/edit/'.$saved_id,
 					'title' => lang('ionize_title_edit_page')
 				);
 
@@ -380,15 +365,23 @@ class Page extends MY_admin
 	 */
 	function switch_online($id)
 	{
+		// Clear the cache
+		Cache()->clear_cache();
+
 		$status = $this->page_model->switch_online($id);
 
-		$this->id = $id;
-
-		// Output array
-		$output_data = array('status' => $status);
+		$this->callback = array(
+			array(
+				'fn' => 'ION.switchOnlineStatus',
+				'args' => array(
+					'status' => $status,
+					'selector' => '.page'.$id
+				)
+			)
+		);
 		
 		// Answer send
-		$this->success(lang('ionize_message_operation_ok'), $output_data);
+		$this->success(lang('ionize_message_operation_ok'));
 	}
 
 
@@ -403,6 +396,9 @@ class Page extends MY_admin
 	{
 		if( $order = $this->input->post('order') )
 		{
+			// Clear the cache
+			Cache()->clear_cache();
+
 			// Saves the new ordering
 			$this->page_model->save_ordering($order);
 
@@ -412,6 +408,107 @@ class Page extends MY_admin
 		else 
 		{
 			$this->error(lang('ionize_message_operation_nok'));
+		}
+	}
+
+
+	// ------------------------------------------------------------------------
+
+	function reorder_articles()
+	{
+		$id_page = $this->input->post('id_page');
+		$direction = $this->input->post('direction');
+		
+		if ($direction && $id_page)
+		{
+			// Clear the cache
+			Cache()->clear_cache();
+
+			$articles = $this->article_model->get_lang_list(array('id_page'=>$id_page), Settings::get_lang('default'));
+			
+			$kdate = array();
+			foreach($articles as $key => $article)
+			{
+				$kdate[$key] = strtotime($article['date']);
+			}
+
+			$sort_direction = 'SORT_'.$direction;
+			
+			// Sort the results by realm occurences DESC first, by date DESC second.			
+			array_multisort($kdate, constant($sort_direction), $articles);
+			
+			$ids = array();
+			foreach($articles as $idx => $article)
+			{
+				$this->page_model->update(array('id_page'=>$id_page, 'id_article' => $article['id_article']), array('ordering' => $idx + 1), 'page_article');
+				$ids[] = $article['id_article'];
+			}
+
+			$this->callback = array(
+				array(
+					'fn' => 'ION.HTML',
+					'args' => array('article/get_list', array('id_page' => $id_page), array('update' => 'articleListContainer'))
+				),
+				array(
+					'fn' => 'ION.notification',
+					'args' => array('success', lang('ionize_message_articles_ordered'))
+				),
+				array(
+					'fn' => 'ION.updateArticleOrder',
+					'args' => array(
+						'id_page' => $id_page,
+						'order' => implode(',', $ids)
+					)
+				)				
+			);
+
+			$this->response();
+		}
+	}
+
+
+	function update_field()
+	{
+		$field = $this->input->post('field');
+		$id_page = $this->input->post('id_page');
+		$type = $this->input->post('type');
+		
+		if ($id_page && $field)
+		{
+			$value = $this->input->post('value');
+			
+			// Check the type of data, for special process
+			if ($type == 'date')
+			{
+				$value = ($value) ? getMysqlDatetime($value) : '0000-00-00 00:00:00';
+			}
+
+			// Update
+			$result = $this->page_model->update(array('id_page' => $id_page), array($field => $value));
+
+			if ($result)
+			{
+				// Datas
+				$page = $this->page_model->get($id_page, Settings::get_lang('default'));
+				$menu = $this->menu_model->get($page['id_menu']);
+				
+//				$page = array_merge($this->page_model->get_lang(Settings::get_lang('default')), $page);
+				$page['title'] = htmlspecialchars_decode($page['title'], ENT_QUOTES);
+				$page['element'] = 'page';
+				$page['menu'] = $menu;
+
+				$this->callback[] = array(
+					'fn' => 'ION.notification',
+					'args' => array('success', lang('ionize_message_page_saved'))
+				);
+
+				$this->callback[] = array(
+					'fn' => 'ION.updateTreePage',
+					'args' => $page
+				);
+
+				$this->response();
+			}
 		}
 	}
 
@@ -431,6 +528,9 @@ class Page extends MY_admin
 	 */
 	function add_link()
 	{
+		// Clear the cache
+		Cache()->clear_cache();
+
 		// Page which received the link
 		$id_page = $this->input->post('receiver_rel');
 		$link_type = $this->input->post('link_type');
@@ -474,7 +574,7 @@ class Page extends MY_admin
 			{
 				$this->callback[] = array
 				(
-					'fn' => 'MUI.notification',
+					'fn' => 'ION.notification',
 					'args' => array	(
 						'error',
 						lang('ionize_message_url_not_found')
@@ -485,7 +585,7 @@ class Page extends MY_admin
 			{
 				$this->callback[] = array
 				(
-					'fn' => 'MUI.notification',
+					'fn' => 'ION.notification',
 					'args' => array	(
 						'error',
 						lang('ionize_message_url_got_404')
@@ -518,6 +618,9 @@ class Page extends MY_admin
 		
 		if ($id_page)
 		{
+			// Clear the cache
+			Cache()->clear_cache();
+
 			$context = array(
 				'link_type' => '',
 				'link_id' => '',
@@ -560,9 +663,27 @@ class Page extends MY_admin
 		// Delete was successfull
 		if ($affected_rows > 0)
 		{
-			// Remember the deleted page ID
-			$this->id = $id;
+			// Clear the cache
+			Cache()->clear_cache();
+
+			// Remove deleted article from DOM
+			$this->callback[] = array(
+				'fn' => 'ION.deleteDomElements',
+				'args' => array('.page' . $id)
+			);
 			
+			// If the current edited article is deleted
+			if ($this->input->post('redirect'))
+			{
+				$this->callback[] = array(
+					'fn' => 'ION.updateElement',
+					'args' => array(
+						'element' => 'mainPanel',
+						'url' => 'dashboard'
+					)
+				);
+			}
+
 			$this->success(lang('ionize_message_operation_ok'));
 		}
 		else
@@ -588,9 +709,9 @@ class Page extends MY_admin
 		// Set the data to the posted value.
 		foreach ($fields as $field)
 		{
-			if ( ! in_array($field, $this->no_htmlspecialchars))
-				$this->data[$field] = htmlspecialchars($this->input->post($field), ENT_QUOTES, 'utf-8');
-			else
+//			if ( ! in_array($field, $this->no_htmlspecialchars))
+//				$this->data[$field] = htmlspecialchars($this->input->post($field), ENT_QUOTES, 'utf-8');
+//			else
 				$this->data[$field] = $this->input->post($field);
 		}
 
@@ -655,8 +776,8 @@ class Page extends MY_admin
 					$content = $this->input->post($field.'_'.$language['lang']);
 					
 					// Convert HTML special char only on other fields than these defined in $no_htmlspecialchars
-					if ( ! in_array($field, $this->no_htmlspecialchars))
-						$content = htmlspecialchars($content, ENT_QUOTES, 'utf-8');
+//					if ( ! in_array($field, $this->no_htmlspecialchars))
+//						$content = htmlspecialchars($content, ENT_QUOTES, 'utf-8');
 						
 					$this->lang_data[$language['lang']][$field] = $content;
 				}
@@ -674,52 +795,6 @@ class Page extends MY_admin
 		unset($this->data['link']);
 		unset($this->data['link_type']);
 		unset($this->data['link_id']);
-					
-
-
-		/*
-		 * Links
-		 *
-		if ($this->data['link'] != lang('ionize_label_drop_link_here'))
-		{
-			// External Link cleaning : We assume an external link has a "." in its URL
-			if (strpos($this->data['link'], '.') !== FALSE OR $this->data['link_type'] == '')
-			{
-				$this->data['link_id'] = '';
-				$this->data['link_type'] = 'external';
-				
-				if ( ! empty($this->data['link']))
-					$this->data['link'] = prep_url($this->data['link']);
-				
-				// This link is unique : All languages data need to have the same
-				foreach(Settings::get_languages() as $language)
-				{
-					$this->lang_data[$language['lang']]['link'] = $this->data['link'];
-				}
-				
-			}
-			// Internal link : Get link urls for each language
-			else if ($this->data['link_type'] != '' && $this->data['link_type'] != '0')
-			{
-				$elements = $this->{$this->data['link_type'].'_model'}->get_lang($this->data['link_id']);
-				
-				foreach ($elements as $element)
-				{
-					$this->lang_data[$element['lang']]['link'] = $element['url'];
-				}
-			}
-		}
-		// Clean languages link
-		else
-		{
-			$this->data['link'] = '';
-			
-			foreach(Settings::get_languages() as $language)
-			{
-				$this->lang_data[$language['lang']]['link'] = '';
-			}
-		}
-		 */
 	}
 
 	

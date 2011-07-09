@@ -1,26 +1,25 @@
 <div class="toolbox divider nobr">
-	<input id="pageFormSubmit" type="button" class="submit" value="<?= lang('ionize_button_save_page') ?>" />
+	<input type="button" id="pageFormSubmit" class="button yes" value="<?= lang('ionize_button_save_page') ?>" />
 </div>
 
 <div class="toolbox divider nobr" id="tPageDeleteButton">
-	<input id="pageDeleteButton" type="button" class="button no" value="<?= lang('ionize_button_delete') ?>" />
+	<input type="button" id="pageDeleteButton" class="button no" value="<?= lang('ionize_button_delete') ?>" />
 </div>
 
 <div class="toolbox divider">
 	<input type="button" class="toolbar-button" id="sidecolumnSwitcher" value="<?= lang('ionize_label_hide_options') ?>" />
 </div>
 
-
 <div class="toolbox divider" id="tPageAddContentElement">
-	<input id="addContentElement" type="button" class="toolbar-button element" value="<?= lang('ionize_label_add_content_element') ?>" />
+	<input type="button" id="addContentElement" class="toolbar-button element" value="<?= lang('ionize_label_add_content_element') ?>" />
 </div>
 
-<div class="toolbox" id="tPageMediaButton">
-	<input id="addMedia" type="button" class="fmButton toolbar-button pictures" value="<?= lang('ionize_label_attach_media') ?>"/>
+<div class="toolbox divider" id="tPageMediaButton">
+	<input type="button" id="addMedia" class="fmButton toolbar-button pictures" value="<?= lang('ionize_label_attach_media') ?>"/>
 </div>
 
-<div class="toolbox divider" id="tPageAddArticle">
-	<input id="addArticle" type="button" class="toolbar-button plus" value="<?= lang('ionize_label_add_article') ?>" />
+<div class="toolbox" id="tPageAddArticle">
+	<input type="button" id="addArticle" class="toolbar-button plus" value="<?= lang('ionize_label_add_article') ?>" />
 </div>
 
 
@@ -33,7 +32,7 @@
 	 * see init.js for more information about this method
 	 *
 	 */
-	MUI.setFormSubmit('pageForm', 'pageFormSubmit', 'page/save');
+	ION.setFormSubmit('pageForm', 'pageFormSubmit', 'page/save');
 
 
 	/**
@@ -52,13 +51,18 @@
 	else
 	{
 		// Delete button
-		$('pageDeleteButton').setProperty('rel', id);
-		ION.initItemDeleteEvent($('pageDeleteButton'), 'page');
+//		$('pageDeleteButton').setProperty('rel', id);
+//		ION.initItemDeleteEvent($('pageDeleteButton'), 'page');
+
+	 	var url = admin_url + 'page/delete/';
+		ION.initRequestEvent($('pageDeleteButton'), url + id, {'redirect':true}, {'confirm':true, 'message': Lang.get('ionize_confirm_element_delete')})
+
+
 
 		// Add Content Element button
 		$('addContentElement').addEvent('click', function(e)
 		{
-			MUI.dataWindow('contentElement', 'ionize_title_add_content_element', 'element/add_element', {width:500, height:300}, {'parent':'page', 'id_parent': id});
+			ION.dataWindow('contentElement', 'ionize_title_add_content_element', 'element/add_element', {width:500, height:300}, {'parent':'page', 'id_parent': id});
 		});
 
 
@@ -77,7 +81,7 @@
 		{
 			var e = new Event(e).stop();
 			
-			MUI.updateContent({
+			MUI.Content.update({
 				'element': $('mainPanel'),
 				'loadMethod': 'xhr',
 				'url': admin_url + 'article/create/' + id,
@@ -90,12 +94,12 @@
 	 * Options show / hide button
 	 *
 	 */
-	MUI.initSideColumn();
+	ION.initSideColumn();
 
 	/**
 	 * Save with CTRL+s
 	 *
 	 */
-	MUI.addFormSaveEvent('pageFormSubmit');
+	ION.addFormSaveEvent('pageFormSubmit');
 
 </script>

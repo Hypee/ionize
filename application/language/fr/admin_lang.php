@@ -48,6 +48,7 @@ $lang['ionize_login_remember'] = 'Souvenez-vous';
 $lang['ionize_login'] = 'Se connecter';
 $lang['ionize_forgot_password'] = 'Mot de passe oublié ?';
 $lang['ionize_session_expired'] = 'Votre session a expiré. Veuillez vous reconnecter.';
+$lang['ionize_login_error'] = 'Une erreur est survenue...';
 
 
 /*
@@ -87,6 +88,7 @@ $lang['ionize_button_toggle_header'] = 'Afficher / Masquer barre principale';
 | Admin navigation menu
 |--------------------------------------------------------------------------
 */
+$lang['ionize_menu_dashboard'] = 'Bureau';
 $lang['ionize_menu_content'] = 'Contenu';
 $lang['ionize_menu_articles'] = 'Articles';
 $lang['ionize_menu_translation'] = 'Traductions statiques';
@@ -494,6 +496,8 @@ $lang['ionize_title_thumbs_system'] = 'Miniatures Ionize';
 $lang['ionize_title_form_antispam_key'] = 'Clé JS Antispam';
 $lang['ionize_title_article_management'] = 'Gestion des articles';
 $lang['ionize_title_admin_url'] = 'URL de l\'Administration du site';
+$lang['ionize_title_encryption_key'] = 'Clé d\'encryption';
+$lang['ionize_title_cache'] = 'Cache';
 
 $lang['ionize_label_thumb_automatic'] = 'Automatique';
 $lang['ionize_label_files_path'] = 'Dossier des médias';
@@ -513,6 +517,8 @@ $lang['ionize_label_db_pass'] = 'Mot de passe';
 $lang['ionize_label_google_analytics'] = 'Google Analytics';
 $lang['ionize_label_tinybuttons'] = 'Barre TinyMCE';
 $lang['ionize_label_restore_tinybuttons'] = 'Restorer les commandes TinyMCE par défaut';
+$lang['ionize_label_tinyblockformats'] = 'Select Formats TinyMCE';
+$lang['ionize_label_restore_tinyblockformats'] = 'Restorer les formats par défaut';
 
 $lang['ionize_label_smtp_protocol'] = 'Protocole';
 $lang['ionize_label_smtp_host'] = 'Host';
@@ -522,6 +528,10 @@ $lang['ionize_label_smtp_port'] = 'Port';
 $lang['ionize_label_email_charset'] = 'Charset';
 $lang['ionize_label_email_mailtype'] = 'Format';
 $lang['ionize_label_mailpath'] = 'Chemin Mail';
+
+$lang['ionize_label_cache_expiration'] = 'Expiration (mins.)';
+$lang['ionize_label_clear_cache'] = 'Vider Cache';
+$lang['ionize_button_clear_cache'] = 'Vider';
 
 $lang['ionize_label_thumb_dir'] = 'Dossier';
 $lang['ionize_label_thumb_size'] = 'Taille';
@@ -583,6 +593,9 @@ $lang['ionize_help_tinybuttons'] = 'Voir la documentation TinyMCE';
 $lang['ionize_help_setting_picture_max_height'] = 'Les images dont la taille excède cette taille vont être retaillées durant l\'upload';
 $lang['ionize_help_setting_picture_max_width'] = 'Les images dont la taille excède cette taille vont être retaillées durant l\'upload';
 
+$lang['ionize_help_cache_expiration'] = 'Durée en minutes de validité du cache avant régénération';
+$lang['ionize_help_clear_cache'] = 'Supprime touts les fichiers du cache.';
+
 /*
 |--------------------------------------------------------------------------
 | Admin : Themes
@@ -597,7 +610,7 @@ $lang['ionize_label_view_name'] = 'Nom logique';
 $lang['ionize_label_view_type'] = 'Type';
 $lang['ionize_label_current_theme'] = 'Thème en cours';
 
-$lang['ionize_select_no_type'] = '-- Aucun --';
+$lang['ionize_select_no_type'] = '-- Aucun Type --';
 $lang['ionize_message_views_saved'] = 'Définition des vues enregistrée';
 
 $lang['ionize_message_view_saved'] = 'Vue enregistrée';
@@ -613,6 +626,7 @@ $lang['ionize_title_create_page'] = 'Création d\'une page';
 $lang['ionize_title_new_page'] = 'Nouvelle page';
 $lang['ionize_title_edit_page'] = 'Edition d\'une page';
 $lang['ionize_title_page_parent'] = 'Parent';
+$lang['ionize_title_sub_navigation'] = 'Navigation';
 
 $lang['ionize_title_help_articles_types'] = 'A propos des types d\'article';
 
@@ -627,8 +641,13 @@ $lang['ionize_label_article_list_template'] = 'Vue liste';
 $lang['ionize_label_page_delete_date'] = 'Date suppression page';
 $lang['ionize_label_menu'] = 'Menu';
 $lang['ionize_label_home_page'] = 'Page d\'accueil';
+$lang['ionize_label_article_reorder'] = 'Réordonner';
+$lang['ionize_label_date_asc'] = 'Date Ascendante';
+$lang['ionize_label_date_desc'] = 'Date Descendante';
 
-$lang['ionize_select_default_view'] = '-- Non défini --';
+$lang['ionize_button_reorder'] = 'Réordonner';
+
+$lang['ionize_select_default_view'] = '-- Vue par défaut --';
 $lang['ionize_select_everyone'] = '-- Tous --';
 
 $lang['ionize_message_page_name_exists'] = 'Cette page existe déjà !';
@@ -639,6 +658,7 @@ $lang['ionize_message_page_not_exist'] = 'Page inexistante';
 $lang['ionize_message_page_ordered'] = 'Page réordonnées';
 $lang['ionize_message_page_needs_url_or_title'] = 'Saisissez le titre ou l\'URL de la langue par défaut !';
 $lang['ionize_message_drop_only_article'] = 'Seul un article peut être glissé ici';
+$lang['ionize_message_articles_ordered'] = 'Articles réordonnés !';
 
 $lang['ionize_help_page_online'] = 'Cette page est-elle en ligne ?';
 $lang['ionize_help_page_content_online'] = 'Cette page est-elle en ligne pour cette langue ?';
@@ -654,6 +674,7 @@ $lang['ionize_help_add_page_to_menu'] = 'Ajouter une page à ce menu';
 $lang['ionize_help_page_drop_article_here'] = 'Glissez un article depuis l\'arborescence en sélectionnant son nom.';
 $lang['ionize_label_help_articles_types_and_views'] = 'A propos des types et des vues';
 $lang['ionize_label_help_articles_types'] = 'A propos des types';
+$lang['ionize_label_help_articles_reorder'] = 'Réordonne les articles par date. Détermination de la date : Logique ou Publication ou Création.';
 
 /*
 |--------------------------------------------------------------------------
@@ -686,6 +707,7 @@ $lang['ionize_label_link'] = 'Lien';
 $lang['ionize_label_description'] = 'Description';
 $lang['ionize_label_reload_media_list'] = 'Recharger liste';
 $lang['ionize_label_media_container'] = 'Album / Série';
+$lang['ionize_label_media_crop_picture'] = 'Retailler Image';
 
 $lang['ionize_message_please_save_first'] = 'Veuillez enregistrer avant d\'ajouter un media !';
 $lang['ionize_message_media_not_authorized'] = 'Type de média non autorisé !';
@@ -780,6 +802,7 @@ $lang['ionize_message_article_already_linked_to_page'] = 'Article already linked
 $lang['ionize_message_article_linked_to_page'] = 'Article linked to page';
 $lang['ionize_message_article_context_saved'] = 'Données article enregistrées';
 $lang['ionize_message_article_lang_copied'] = 'Contenu copié. Veuillez sauvegarder !';
+$lang['ionize_message_article_main_parent_saved'] = 'Parent Principal sauvegardé !';
 
 // Inline help
 $lang['ionize_help_article_online'] = 'Cet article est-il en ligne ?';
@@ -929,3 +952,21 @@ $lang['ionize_message_module_uninstalled'] = 'Module désinstallé';
 $lang['ionize_message_module_not_installed'] = 'Module non installé !';
 
 
+/*
+|--------------------------------------------------------------------------
+| Admin : System Check
+|--------------------------------------------------------------------------
+*/
+$lang['ionize_title_system_check'] = 'Diagnostic Système';
+$lang['ionize_menu_system_check'] = 'Diagnostic Système';
+$lang['ionize_text_system_check'] = 'Cet outil contrôle l\'intégrité des données Ionize et corrige les éventuelles incohérences.';
+
+$lang['ionize_label_start_system_check'] = 'Commencer le test';
+$lang['ionize_button_start_system_check'] = 'Aller hop !';
+
+$lang['ionize_title_check_lang'] = 'Langues';
+$lang['ionize_title_check_page_level'] = 'Levels des Pages';
+$lang['ionize_title_check_article_context'] = 'Contexte des articles';
+
+$lang['ionize_message_check_corrected'] = ' corrigé(s).';
+$lang['ionize_message_check_ok'] = 'Tout va bien.';

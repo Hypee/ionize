@@ -76,16 +76,33 @@ class Config_model extends Base_model
 //			$pattern = '%(config\[\''.$key.'\'\] = \')(.*)(\';)%';
 			$pattern = '%(config\[\''.$key.'\'\] = )(\'?.*\'?)(;)%';
 
+//			$pattern = '%(config\[\''.$key.'\'\] = )(\'?.[\S|\s]*\'?)(;)%'; // Does not work
+
+//			$pattern = '%(config\[\''.$key.'\'\] = )(\'?.[\s]*\'?;)%';
+			
 			$type = gettype($val);
 			
 			if ($type == 'string')
 			{
-				$val = "'".$val."'";
-			}
-			if ($type == 'boolean') $val = ($val ? TRUE : (int) FALSE);
+//				if ($val == '1' OR strtolower($val) == 'true')
+				if (strtolower($val) == 'true')
+					$val = var_export(TRUE, TRUE);
 
+//				else if ($val == '0' OR strtolower($val) == 'false')
+				else if (strtolower($val) == 'false')
+					$val = var_export(FALSE, TRUE);
+				
+				else if (strval(intval($val)) == $val)
+					$val = intval($val);
+				
+				else $val = "'".$val."'";
+			}
+			if ($type == 'boolean') $val = ($val ? var_export(TRUE, TRUE) : var_export(FALSE, TRUE) );
+			
+			if ($type == 'array') $val = var_export($val, TRUE);
 
 			self::$content = preg_replace($pattern, '${1}'.$val. '${3}', self::$content );
+//			self::$content = preg_replace($pattern, '${1}'.$val . ';', self::$content );
 
 			return TRUE;
 		}

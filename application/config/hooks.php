@@ -10,13 +10,54 @@
 |
 */
 
-// load the file here, to allow use of connect() in constructor
+// Connect Library : To use in constructors
 require_once APPPATH.'libraries/Connect.php';
 
-$hook['post_controller_constructor'] = array (
-										'function'	=> 'init_connect',
-										'filename'	=> 'Connect.php',
-										'filepath'	=> 'libraries'
-										);
+// Cache Library : Available everywhere
+require_once APPPATH.'libraries/Cache.php';
+
+
+$hook['post_controller_constructor'][] = array (
+	'function'	=> 'init_connect',
+	'filename'	=> 'Connect.php',
+	'filepath'	=> 'libraries'
+);
+
+/*
+$hook['display_override'][] = array(
+	'class' => '',
+	'function' => 'remove_comments',
+	'filename' => 'remove_comments.php',
+	'filepath' => 'hooks'
+	);
+*/
+
+
+
+/*
+$hook['display_override'][] = array(
+	'class' => '',
+	'function' => 'compress',
+	'filename' => 'compress.php',
+	'filepath' => 'hooks'
+	);
+/*
+$hook['post_controller_constructor'][] = array(
+	'class'    => 'Cache',
+	'function' => 'post_controller_constructor_cache',
+	'filename' => 'Cache.php',
+	'filepath' => 'libraries',
+	'params'   => array()
+);
+$hook['cache_override'] = array(
+	'class' => 'Cache',
+	'function' => 'display_cache_override',
+	'filename' => 'Cache.php',
+	'filepath' => 'libraries',
+	'params' => array()
+);
+*/
+
+
 /* End of file hooks.php */
-/* Location: ./system/application/config/hooks.php */
+/* Location: ./application/config/hooks.php */

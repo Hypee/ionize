@@ -1,7 +1,7 @@
 
 <div id="sidecolumn" class="close">
 
-	<div id="options">
+	<div id="options" class="mt20">
 
 		<!-- New Menu -->
 		<h3 class="toggler"><?=lang('ionize_title_add_menu')?></h3>
@@ -131,17 +131,17 @@
 	 * see init-form.js for more information about this method
 	 *
 	 */
-	MochaUI.setFormSubmit('newMenuForm', 'submit_new', 'menu/save');
+	ION.setFormSubmit('newMenuForm', 'submit_new', 'menu/save');
 
 	
 	/**
 	 * Panel toolbox
 	 *
 	 */
-	MUI.initToolbox('menu_toolbox');
+	ION.initToolbox('menu_toolbox');
 
 				
-	MUI.initAccordion('.toggler', 'div.element');
+	ION.initAccordion('.toggler', 'div.element', true, 'menuAccordion1');
 	
 
 

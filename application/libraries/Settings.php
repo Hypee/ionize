@@ -31,6 +31,8 @@ class Settings
 	
 	public static $online_languages = array();
 
+	public static $mimes = array();
+
 
 	/**
 	 * Sets one setting
@@ -206,6 +208,30 @@ class Settings
 		}
 	}
 
+
+	public static function get_default_admin_lang()
+	{
+		$default_admin_lang = self::get('default_admin_lang');
+		$displayed_admin_lang = self::get('displayed_admin_languages');
+		
+		// Correct the default Admin panel language
+		if ( ! in_array($default_admin_lang, $displayed_admin_lang))
+			$default_admin_lang = config_item('language');
+		
+		return $default_admin_lang;
+	}
+	
+	
+	public static function get_uri_lang()
+	{
+		$str = preg_replace("|/*(.+?)/*$|", "\\1", str_replace(base_url(), '', current_url()));
+		$uri_segments = explode('/', $str);
+		$uri_lang = current($uri_segments);
+		
+		return $uri_lang;	
+	}
+	
+	
 	// ------------------------------------------------------------------------
 
 
@@ -228,7 +254,7 @@ class Settings
 
 
 	/**
-	 * Returns the language code regarding to the type
+	 * Returns the website (visitor side) language code regarding to the type
 	 *
 	 * @param	string	Wished lang code. Optional.
 	 *					'first' :	returns the first language code (depending on the language ordering in DB) 
@@ -275,6 +301,78 @@ class Settings
 		}
 
 		return $lang;
+	}
+	
+	
+	public static function get_mimes_types()
+	{
+		global $mimes;
+	
+		if (count(self::$mimes) == 0)
+		{
+			if (@require_once(APPPATH.'config/mimes_ionize'.EXT))
+			{
+				self::$mimes = $mimes_ionize;
+				unset($mimes_ionize);
+			}
+		}
+
+		return self::$mimes;
+	}
+	
+	
+	public static function get_allowed_extensions($type = FALSE)
+	{
+		$allowed_extensions = array();
+		
+		require_once(APPPATH.'config/mimes_ionize'.EXT);
+
+		$filemanager_file_types = explode(',', self::$settings['filemanager_file_types']);
+
+		if ($type == FALSE)
+		{
+			foreach($mimes_ionize as $type)
+			{
+				foreach($type as $ext => $mime)
+				{
+					if (in_array($ext, $filemanager_file_types))
+						$allowed_extensions[] = $ext;
+				}
+			}
+		}
+		else
+		{
+			if ( ! empty($mimes_ionize[$type]))
+			{
+				foreach($mimes_ionize[$type] as $ext => $mime)
+				{
+					if (in_array($ext, $filemanager_file_types))
+						$allowed_extensions[] = $ext;
+				}
+			}
+		}
+		
+		return $allowed_extensions;
+	}
+	
+	
+	public static function get_allowed_mimes()
+	{
+		$allowed_mimes = array();
+		
+		require_once(APPPATH.'config/mimes_ionize'.EXT);
+
+		$filemanager_file_types = explode(',', self::get('filemanager_file_types'));
+		
+		foreach($mimes_ionize as $type)
+		{
+			foreach($type as $ext => $mime)
+			{
+				if ( ! in_array($mime, $allowed_mimes) && in_array($ext, $filemanager_file_types))
+					$allowed_mimes[] = $mime;
+			}
+		}
+		return $allowed_mimes;
 	}
 }
 

@@ -120,6 +120,9 @@ class Translation extends MY_admin
 	 */
 	function save()
 	{
+		// Clear the cache
+		Cache()->clear_cache();
+
 		foreach(Settings::get_languages() as $language)
 		{
 			$lang = $language['lang'];
@@ -150,7 +153,13 @@ class Translation extends MY_admin
 					
 					if ($term != '')
 					{
-						$value = str_replace("\'", "'", $_REQUEST[str_replace(' ', '_', 'value_'.$lang.'_'.$idx)]);
+						$value = $_REQUEST[str_replace(' ', '_', 'value_'.$lang.'_'.$idx)];
+						
+						if (!get_magic_quotes_gpc())
+						{
+							$value = addslashes($value);
+						}
+						$value = str_replace("\'", "'", $value);
 						
 						$data .= "\$lang['".$term."'] = \"".$value."\";\n"; 
 					}

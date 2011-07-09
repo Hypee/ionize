@@ -254,7 +254,14 @@ input.date {
 
 
 
-/* Yes button, No button */
+/* Yes button, No button, Submit */
+.button {
+	margin: 0 2px;
+	height: 24px;
+	background:url(../images/button-bg.jpg) no-repeat 0 50%;
+}
+.button:hover {	background:url(../images/button-bg.jpg) no-repeat -200px 50%; }
+
 .button.yes { background:url(../images/button-yes-bg.jpg) no-repeat 0 50%; }
 .button.yes:hover { background:url(../images/button-yes-bg.jpg) no-repeat -200px 50%; }
 
@@ -263,13 +270,6 @@ input.date {
 
 .button.left {float:left;}
 .button.right {float:right;}
-/*.button {float:right;margin:0 2px;}*/
-.button {margin:0 2px;}
-
-
-/* Standard button and submit button */
-.button { background:url(../images/button-bg.jpg) no-repeat 0 50%; }
-.button:hover {	background:url(../images/button-bg.jpg) no-repeat -200px 50%; }
 
 .submit { background:url(../images/submit-bg.jpg) no-repeat 0 50%; }
 .submit:hover {	background:url(../images/submit-bg.jpg) no-repeat -200px 50%; }
@@ -301,10 +301,14 @@ input.date {
 .toolbar-button.back, .light-button.back { background:url(../images/icon_16_left.png) no-repeat 4px 50%; padding-left: 24px; }
 .toolbar-button.helpme, .light-button.helpme { background:url(../images/icon_16_helpme.png) no-repeat 4px 50%; padding-left: 24px; }
 .toolbar-button.element, .light-button.element { background:url(../images/icon_16_element.png) no-repeat 4px 50%; padding-left: 24px; }
+.toolbar-button.print, .light-button.print { background:url(../images/icon_16_print.png) no-repeat 4px 50%; padding-left: 24px; }
+.toolbar-button.search, .light-button.search { background:url(../images/icon_16_search.png) no-repeat 4px 50%; padding-left: 24px; }
+.toolbar-button.calendar, .light-button.calendar { background:url(../images/icon_16_calendar.png) no-repeat 4px 50%; padding-left: 24px; }
+.toolbar-button.alert, .light-button.alert { background:url(../images/icon_16_alert.png) no-repeat 4px 50%; padding-left: 24px; }
 
 .toolbar-button:hover, .light-button:hover {
 	border:1px solid #bbb;
-	background-color: #fff;
+	background-color: #fff !important;
 }
 
 /* Toolbox inputs */

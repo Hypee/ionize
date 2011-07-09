@@ -52,10 +52,13 @@ class Module extends MY_admin
 	{
 		// Delete the segments before the module name
 		$mod_uri = array_slice($this->uri->segments, 3);
-		
+
 		// Get the controller, the called func name and the args
 		$module_controller = $mod_uri[0];
-		$module_func = $mod_uri[1];
+		
+		$module_func = 'index';
+		if (isset($mod_uri[1]))
+			$module_func = $mod_uri[1];
 		
 		$module_args = array_slice($mod_uri, 2);
 
@@ -66,23 +69,24 @@ class Module extends MY_admin
 		array_unshift(Finder::$paths, $module_path);
 
 		// Includes the module Class file
-		include($module_path.'controllers/admin/'.$module_controller.EXT);
+		if ( ! class_exists($module_controller) )
+			include($module_path.'controllers/admin/'.$module_controller.EXT);
 
 		// Create an instance of the module controller
 		$obj = new $module_controller($this);
 		
 		// Loads module language file, if exists
-		if (is_file($module_path.'language/'.$this->config->item('language_abbr').'/'.$module_name.'_lang.php'))
+//		if (is_file($module_path.'language/'.$this->config->item('language_abbr').'/'.$module_name.'_lang.php'))
+//		{
 			$this->lang->load($module_name, $this->config->item('language_abbr'));
-		else
-		{
-			trace('warning: no language file for this module in : '. $module_path.'language/'.$this->config->item('language_abbr').'/');
-		}
+//		}
+//		else
+//		{
+//			trace('warning: no language file for this module in : '. $module_path.'language/'.$this->config->item('language_abbr').'/');
+//		}
 
 		call_user_func_array(array($obj, $module_func), $module_args);
-
 	}
-
 }
 
 

@@ -40,10 +40,7 @@ class Media extends MY_admin
 
 		// Models
 		$this->load->model('media_model');
-//		if (Settings::get('use_extend_fields') == '1')
-//		{
-			$this->load->model('extend_field_model', '', true);
-//		}
+		$this->load->model('extend_field_model', '', true);
 
 		// Librairies
 		$this->load->library('image_lib');
@@ -116,21 +113,32 @@ class Media extends MY_admin
 	 */
 	function filemanager($event = NULL, $resize = FALSE, $uploadAuthData = FALSE)
 	{
-		// FileManager constructor options
+		// Get allowed mimes
+		$allowed_mimes = implode(',', Settings::get_allowed_mimes());
+
 		$params = array (
-			'directory' => FCPATH.Settings::get('files_path'),
-			'baseURL' => base_url(),
-			'assetBasePath' => FCPATH.Theme::get_theme_path().'javascript/mootools-filemanager/Assets',
-			'assetBaseUrl' => theme_url().'javascript/mootools-filemanager/Assets',
+			'URLpath4FileManagedDirTree' => Settings::get('files_path') . '/',
+			'URLpath4assets' => Theme::get_theme_path().'javascript/mootools-filemanager/Assets',
+			'URLpath4thumbnails' => Settings::get('files_path') . '/.thumbs',
 			'upload' => TRUE,
 			'destroy' => TRUE,
-			'thumbSize' => (Settings::get('media_thumb_size') !='') ? Settings::get('media_thumb_size') : 120,
-			'pictureMaxWidth' => (Settings::get('picture_max_width') !='') ? Settings::get('picture_max_width') : FALSE,
-			'pictureMaxHeight' => (Settings::get('picture_max_height') !='') ? Settings::get('picture_max_height') : FALSE,
-			'maxUploadSize' => intval(substr(ini_get('upload_max_filesize'), 0, -1)) * 1024 * 1024
+			'create' => TRUE,
+			'move' => TRUE,
+			'download' => FALSE,
+			'thumbSmallSize' => (Settings::get('media_thumb_size') !='') ? Settings::get('media_thumb_size') : 120,
+			'thumbBigSize' => 500,
+			'maxImageDimension' => array(
+				'width' => (Settings::get('picture_max_width') !='') ? Settings::get('picture_max_width') : 2000,
+				'height' => (Settings::get('picture_max_height') !='') ? Settings::get('picture_max_height') : 2000
+			),
+			'maxUploadSize' => intval(substr(ini_get('upload_max_filesize'), 0, -1)) * 1024 * 1024,
+			'filter' => $allowed_mimes
 		);
 
-		$this->load->library('filemanager', $params);
+//		$this->load->library('Filemanager', $params);
+		$this->load->library('Filemanagerwithaliassupport', $params);
+
+
 
 		// Fires the Event called by FileManager.js
 		// The answer of this called id a JSON object
@@ -138,14 +146,21 @@ class Media extends MY_admin
 		
 		if ($event != 'upload')
 		{
-			$this->filemanager->fireEvent(!is_null($event) ? $event : null);
+			$this->Filemanagerwithaliassupport->fireEvent(!is_null($event) ? $event : null);
 		}
 		else
 		{
 			if ($event == 'upload')
 			{
-				$uploadAuthData = ( !empty($_POST['uploadAuthData'])) ? $_POST['uploadAuthData'] : FALSE;
-			
+				// $user = Connect()->get_current_user();
+				
+				if (Connect()->is('Editors') && Connect()->logged_in())
+				{
+					$uploadAuthData = ( !empty($_POST['uploadAuthData'])) ? $_POST['uploadAuthData'] : FALSE;
+					
+					$this->Filemanagerwithaliassupport->fireEvent($event);
+				}
+/*			
 				// Get all DB saved CI sessions in order to check the tokken
 				$query = $this->db->get(config_item('sess_table_name'));
 				
@@ -168,7 +183,7 @@ class Media extends MY_admin
 					// Fires the Filemanager event if the user is connected
 					if ($connected === TRUE)
 					{
-						$this->filemanager->fireEvent($event);
+						$this->Filemanagerwithaliassupport->fireEvent($event);
 					}
 					// The user isn't connected
 					else
@@ -179,6 +194,7 @@ class Media extends MY_admin
 						));
 					}
 				}
+*/
 				// No session saved in DB
 				else
 				{
@@ -283,6 +299,84 @@ class Media extends MY_admin
 	}
 
 
+	function get_crop($id_media)
+	{
+		$picture = $this->media_model->get($id_media);
+		
+		$path = $picture['path'];
+
+		$size = @getimagesize(FCPATH.$path);
+		$size = array
+		(
+			'width' => $size[0],
+			'height' => $size[1]
+		);
+			
+		$this->template['id_media'] = $id_media;
+		$this->template['path'] = $path;
+		$this->template['size'] = $size;
+		
+		$this->output('media_picture_crop');	
+	}
+
+	
+	function crop()
+	{
+		$path = $this->input->post('path');
+		$coords = $this->input->post('coords');
+		$id_media = $this->input->post('id_media');
+		
+		$path = FCPATH.$path;
+		
+		// Get image dimension before crop
+		$dim = $this->get_image_dimensions($path);
+			
+		// CI Image_lib config array
+		$config = array
+		(
+			'source_image' => $path,
+			'new_image' => '',
+			'x_axis' => $coords['x'],
+			'y_axis' => $coords['y'],
+			'unsharpmask' => FALSE,
+			'maintain_ratio' => FALSE,
+			'width' => $coords['w'],
+			'height' => $coords['h']
+		);
+		
+		$this->image_lib->clear();
+		$this->image_lib->initialize($config);
+				
+		if ( TRUE !== $this->image_lib->crop() )
+		{
+			// Error Message
+			$this->callback[] = array(
+				'fn' => 'ION.notification',
+				'args' => array('error', lang('ionize_exception_image_crop'))
+			);
+		}
+		else
+		{
+			// Success Message
+			$this->callback[] = array(
+				'fn' => 'ION.notification',
+				'args' => array('success', lang('ionize_message_operation_ok'))
+			);
+
+			$this->callback[] = array(
+				'fn' => 'ION.updateElement',
+				'args' => array(
+					'element'=> 'wImageCrop'.$id_media.'_content',
+					'url' => 'media/get_crop/' . $id_media
+				)
+			);
+
+		}
+		
+		$this->response();
+		
+	}
+
 	// ------------------------------------------------------------------------
 
 
@@ -298,8 +392,11 @@ class Media extends MY_admin
 	 *					Complete path, including media file name, to the medium
 	 *
 	 */
-	function add_media($type, $parent, $id_parent, $path=null) 
+	function add_media($type, $parent, $id_parent) 
 	{
+		// Clear the cache
+		Cache()->clear_cache();
+
 		/*
 		 * Some path cleaning
 		 * The media path should start at the root media dir.
@@ -356,12 +453,13 @@ class Media extends MY_admin
 			$this->media_model->feed_lang_template($id, $data);
 
 			$this->set_ID3($data, $this->get_ID3($path));
-// trace($data);			
+
 			$this->media_model->save($data, $data);
 		}
 		
 		// Parent linking
 		$data = '';		
+
 		if (!$this->media_model->attach_media($type, $parent, $id_parent, $id)) 
 		{
 			$this->error(lang('ionize_message_media_already_attached'));
@@ -456,6 +554,9 @@ class Media extends MY_admin
 	{
 		if ($parent !== false && $id_parent !== false && $id_media !== false)
 		{			
+			// Clear the cache
+			Cache()->clear_cache();
+
 			// Delete succeed : Message to user
 			if ($this->media_model->delete_joined_key('media', $id_media, $parent, $id_parent) > 0)
 			{
@@ -492,6 +593,9 @@ class Media extends MY_admin
 	{
 		if ($parent !== false && $id_parent !== false && $type !== false)
 		{
+			// Clear the cache
+			Cache()->clear_cache();
+
 			// Delete succeed : Message to user
 			if ($this->media_model->detach_media_by_type($parent, $id_parent, $type) > 0)
 			{
@@ -520,7 +624,9 @@ class Media extends MY_admin
 
 		if( $order = $this->input->post('order') )
 		{
-			// Saves the new ordering
+			// Clear the cache
+			Cache()->clear_cache();
+
 			$this->media_model->save_ordering($order, $parent, $id_parent);
 			
 			// Answer
@@ -581,6 +687,9 @@ class Media extends MY_admin
 	 */
 	function save()
 	{
+		// Clear the cache
+		Cache()->clear_cache();
+
 		// Standard data;
 		$data = array();
 		
@@ -613,10 +722,8 @@ class Media extends MY_admin
 		$this->id = $this->media_model->save($data, $lang_data);
 
 		// Save extend fields data
-//		if (Settings::get('use_extend_fields') == '1')
-			$this->extend_field_model->save_data('media', $this->id, $_POST);
+		$this->extend_field_model->save_data('media', $this->id, $_POST);
 
-		
 		$media = $this->media_model->get($this->id, Settings::get_lang('default'));
 
 		// Save ID3 to file if MP3
@@ -635,10 +742,7 @@ class Media extends MY_admin
 			}
 
 			$this->write_ID3($media['path'], $tags);
-			
 		}	
-
-
 		
 		if ( $this->id !== false )
 		{
@@ -760,6 +864,13 @@ class Media extends MY_admin
 
 		// System thumbnail full path
 		$thumb_path = FCPATH . str_replace(Settings::get('files_path'), Settings::get('files_path').'/.thumbs', $picture['base_path'] );
+
+		// Create directory is not exists
+		if( ! is_dir($thumb_path) )
+		{
+			if ( ! @mkdir($thumb_path, 0777) )
+				throw new Exception(lang('ionize_exception_folder_creation').' : '.$thumb_path);
+		}
 
 		// Source picture size
 		$dim = $this->get_image_dimensions(FCPATH.$picture['path']);

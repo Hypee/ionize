@@ -30,7 +30,7 @@
 	 * see init.js for more information about this method
 	 *
 	 */
-	MUI.setFormSubmit('articleForm', 'articleFormSubmit', 'article/save');
+	ION.setFormSubmit('articleForm', 'articleFormSubmit', 'article/save');
 	
 	
 	/**
@@ -49,8 +49,13 @@
 	else
 	{
 		// Delete button
+/*		
 		$('articleDeleteButton').setProperty('rel', id);
 		ION.initItemDeleteEvent($('articleDeleteButton'), 'article');
+*/
+	 	var url = admin_url + 'article/delete/';
+		ION.initRequestEvent($('articleDeleteButton'), url + id, {'redirect':true}, {'confirm':true,'message': Lang.get('ionize_confirm_element_delete')})
+
 		
 		// Duplicate button
 		$('articleDuplicateButton').addEvent('click', function(e)
@@ -62,7 +67,7 @@
 			
 			var data = {'id_page': rel[0]};
 			
-			MUI.formWindow(	'DuplicateArticle', 'newArticleForm', 'ionize_title_duplicate_article', 'article/duplicate/' + id + '/' + url, {width:520, height:280}, data);
+			ION.formWindow(	'DuplicateArticle', 'newArticleForm', 'ionize_title_duplicate_article', 'article/duplicate/' + id + '/' + url, {width:520, height:280}, data);
 		});
 		
 		$('addMedia').addEvent('click', function(e)
@@ -75,7 +80,7 @@
 		// Add Content Element button
 		$('addContentElement').addEvent('click', function(e)
 		{
-			MUI.dataWindow('contentElement', 'ionize_title_add_content_element', 'element/add_element', {width:500, height:300}, {'parent':'article', 'id_parent': id});
+			ION.dataWindow('contentElement', 'ionize_title_add_content_element', 'element/add_element', {width:500, height:300}, {'parent':'article', 'id_parent': id});
 		});
 		
 		
@@ -85,12 +90,12 @@
 	 * Options show / hide button
 	 *
 	 */
-	MUI.initSideColumn();
+	ION.initSideColumn();
 	
 	/**
 	 * Save with CTRL+s
 	 *
 	 */
-	MUI.addFormSaveEvent('articleFormSubmit');
+	ION.addFormSaveEvent('articleFormSubmit');
 
 </script>

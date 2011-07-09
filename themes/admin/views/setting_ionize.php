@@ -7,11 +7,13 @@
 
 	<h2 class="main ionize" id="main-title"><?= lang('ionize_title_ionize_settings') ?></h2>
 
+	<!-- Subtitle -->
+	<div class="subtitle">
 		<p><?= lang('ionize_onchange_ionize_settings')?></p>
-	
+	</div>
 
 	<!-- Visual help : help tips and "Connected" label -->
-	<h3 class="toggler1"><?=lang('ionize_title_visual_help')?></h3>
+	<h3 class="toggler1 mt20"><?=lang('ionize_title_visual_help')?></h3>
 	
 	<div class="element1">
 
@@ -41,22 +43,33 @@
 	
 	<div class="element1">
 
-
-		<?php foreach(Settings::get('admin_languages') as $lang) :?>
-			<dl>
-				<dt>
-					<label title="<?= $lang ?>" for="display_lang_<?= $lang ?>"><img src="<?= theme_url() ?>images/world_flags/flag_<?= $lang ?>.gif" alt="<?= $lang ?>" /> </label>
-				</dt>
-				
-				<dd>
-					<input <?php if(in_array($lang, $displayed_admin_languages)) :?>checked="checked" <?php endif ;?>id="display_lang_<?= $lang ?>" class="inputcheckbox" name="displayed_admin_languages[]"  type="checkbox" value="<?= $lang ?>" />
-				</dd>
-			
-			</dl>
-		<?php endforeach ;?>
-	
+		<table class="list w280">
+			<thead>
+				<tr>
+					<th></th>
+					<th class="center">Lang</th>
+					<th class="center">Displayed</th>
+					<th class="center">Default</th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php foreach(Settings::get('admin_languages') as $lang) :?>
+				<tr>
+					<td class="center"><img src="<?= theme_url() ?>images/world_flags/flag_<?= $lang ?>.gif" alt="<?= $lang ?>" class="mt2" /></td>
+					<td class="center">
+						<label for="display_lang_<?= $lang ?>"><?= $lang ?></label>
+					</td>
+					<td class="center">
+						<input <?php if(in_array($lang, $displayed_admin_languages)) :?>checked="checked" <?php endif ;?>id="display_lang_<?= $lang ?>" class="inputcheckbox" name="displayed_admin_languages[]" type="checkbox" value="<?= $lang ?>" />
+					</td>
+					<td class="center">
+						<input <?php if(Settings::get('default_admin_lang') == $lang) :?>checked="checked" <?php endif ;?>id="default_admin_lang_<?= $lang ?>" class="inputcheckbox " name="default_admin_lang" type="radio" value="<?= $lang ?>" />
+					</td>
+				</tr>
+				<?php endforeach ;?>
+			</tbody>
+		</table>
 	</div>
-
 
 	<!-- Admin panel date and time -->
 	<h3 class="toggler1"><?=lang('ionize_title_admin_panel_datetime')?></h3>
@@ -91,21 +104,20 @@
 	 * Panel toolbox
 	 *
 	 */
-	MUI.initToolbox('setting_ionize_toolbox');
+	ION.initToolbox('setting_ionize_toolbox');
 
 	/**
 	 * Options Accordion
 	 *
 	 */
-	MUI.initAccordion('.toggler', 'div.element');
-	MUI.initAccordion('.toggler1', 'div.element1');
+	ION.initAccordion('.toggler1', 'div.element1', false, 'ionizeSettingsAccordion');
 
 	/**
 	 * Init help tips on label
 	 * see init-content.js
 	 *
 	 */
-	MUI.initLabelHelpLinks('#ionizeSettingsForm');
+	ION.initLabelHelpLinks('#ionizeSettingsForm');
 
 
 

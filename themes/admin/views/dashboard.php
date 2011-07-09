@@ -33,7 +33,30 @@
 	
 	</div>
 
+	<?php if ( ! empty($modules)) :?>
+
+		<h3 class="mt20"><?= lang('ionize_menu_modules') ?></h3>
+
+		<div style="overflow:hidden;">
+
+			<?php foreach($modules as $uri => $module) :?>
 	
+				<?php if($this->connect->is($module['access_group'])) :?>
+				
+					<div class="desktopIcon desktopModuleIcon">
+						<img src="<?= base_url() ?>modules/<?= $module['folder'] ?>/assets/images/icon_48_module.png" />
+						<p><a title="<?= $module['name'] ?>" href="module/<?= $uri ?>/<?= $uri ?>/index"><?= $module['name'] ?></a></p>
+					</div>
+				
+				<?php endif ;?>								
+	
+			<?php endforeach ;?>
+
+		</div>
+
+	<?php endif ;?>
+
+
 	<div id="infos" class="mt20">	
 
 		<!-- Last connected users -->
@@ -260,18 +283,18 @@
 	 * Init the panel toolbox is mandatory !!! 
 	 *
 	 */
-	MUI.initToolbox('dashboard_toolbox');
+	ION.initToolbox('dashboard_toolbox');
 
 
 	/**
 	 * Options Accordion
 	 *
 	 */
-	MUI.initAccordion('.toggler', 'div.element');
+	ION.initAccordion('.toggler', 'div.element', false, 'dashboardAccordion');
 
 
 	// Articles edit
-	var articles = ($$('#articleList .article')).extend($$('#orphanArticlesList .article'));
+	var articles = ($$('#articleList .article')).append($$('#orphanArticlesList .article'));
 	
 	
 	articles.each(function(item, idx)
@@ -284,21 +307,20 @@
 		
 		item.addEvent('click', function(e){
 			e.stop();
-			MUI.updateContent({
+			MUI.Content.update({
 				'element': $('mainPanel'),
 				'loadMethod': 'xhr',
 				'url': admin_url + 'article/edit/'+id_page+'.'+id_article,'title': Lang.get('ionize_title_edit_article') + ' : ' + title});
 		});
 		
 		// Make draggable to tree
-//		ION.makeLinkDraggable(item, 'article');
 		ION.addDragDrop(item, '.dropArticleInPage,.dropArticleAsLink,.folder', 'ION.dropArticleInPage,ION.dropArticleAsLink,ION.dropArticleInPage');
 	});
 
 
 
 	// Pages edit
-	var pages = ($$('#articleList a.page')).extend($$('#orphanPagesList a.page'));
+	var pages = ($$('#articleList a.page')).append($$('#orphanPagesList a.page'));
 
 	pages.each(function(item, idx)
 	{
@@ -307,7 +329,7 @@
 		
 		item.addEvent('click', function(e){
 			e.stop();
-			MUI.updateContent({
+			MUI.Content.update({
 				'element': $('mainPanel'),
 				'loadMethod': 'xhr',
 				'url': admin_url + 'page/edit/'+id,'title': Lang.get('ionize_title_edit_page') + ' : ' + title});
@@ -315,12 +337,10 @@
 	});
 
 
-
-
 	// Main Icons actions
 	$('iconAddPage').addEvent('click', function(e){
 		e.stop();
-		MUI.updateContent({
+		MUI.Content.update({
 			element: $('mainPanel'),
 			title: Lang.get('ionize_title_new_page'),
 			url : admin_url + 'page/create/0'
@@ -329,7 +349,7 @@
 	
 	$('iconArticles').addEvent('click', function(e){
 		e.stop();
-		MUI.updateContent({
+		MUI.Content.update({
 			element: $('mainPanel'),
 			title: Lang.get('ionize_title_articles'),
 			url : admin_url + 'article/list_articles'		
@@ -338,7 +358,7 @@
 	
 	$('iconMediaManager').addEvent('click', function(e){
 		e.stop();
-		MUI.updateContent({
+		MUI.Content.update({
 			element: $('mainPanel'),
 			title: Lang.get('ionize_menu_media_manager'),
 			url : admin_url + 'media/get_media_manager',
@@ -348,7 +368,7 @@
 
 	$('iconTranslation').addEvent('click', function(e){
 		e.stop();
-		MUI.updateContent({
+		MUI.Content.update({
 			element: $('mainPanel'),
 			title: Lang.get('ionize_title_translation'),
 			url : admin_url + 'translation/'
@@ -359,18 +379,23 @@
 		e.stop();
 		window.location.href = 'http://www.google.com/analytics/'
 	});
-
-
-	// Flags edit event
-	if ($('edit_flags'))
+	
+	
+	// Modules Icons actions
+	$$('.desktopModuleIcon').each(function(item)
 	{
-		$('edit_flags').addEvent('click', function(e)
-		{
-			e.stop();
-			MUI.updateContent({'element': $('mainPanel'),'loadMethod': 'xhr','url': admin_url + 'setting','title': Lang.get('ionize_menu_site_settings_global') });
+		var a = item.getElement('a');
+		var href = a.getProperty('href');
+		var title = a.getProperty('title');
+		
+		item.addEvent('click', function(e){
+			MUI.Content.update({
+				element: $('mainPanel'),
+				title: title,
+				url : admin_url + ION.cleanUrl(href)
+			});
 		});
-	}
-
-
+	});
+	
 
 </script>

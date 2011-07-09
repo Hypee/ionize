@@ -24,6 +24,8 @@
 class Page_model extends Base_model 
 {
 
+	public $context_table =	'page_article';
+
 
 	/**
 	 * Model Constructor
@@ -50,8 +52,8 @@ class Page_model extends Base_model
 	function get_lang_list($where=false, $lang=NULL)
 	{
 		// Order by ordering field
-		$this->db->orderby($this->table.'.level', 'ASC');
-		$this->db->orderby($this->table.'.ordering', 'ASC');
+		$this->db->order_by($this->table.'.level', 'ASC');
+		$this->db->order_by($this->table.'.ordering', 'ASC');
 
 		// Filter on published
 		$this->filter_on_published(self::$publish_filter, $lang);
@@ -150,6 +152,9 @@ class Page_model extends Base_model
 	}
 
 	
+	// ------------------------------------------------------------------------
+
+
 	/**
 	 * Updates all other articles / pages links when saving one page
 	 *
@@ -164,11 +169,14 @@ class Page_model extends Base_model
 		$link_name = 	($page_lang['title'] != '') ? $page_lang['title'] : $page['name'];
 
 		// Update of pages wich links to this page
-		$sql = "update page as p1
-				set p1.link = '".$link_name."'
-				where p1.link_type = 'page'
-				and p1.link_id = " . $id_page;
-		$this->db->query($sql);
+		$this->db->set('link', $link_name);
+		$this->db->where(
+			array(
+				'link_type' => 'page',
+				'link_id' => $id_page
+			)
+		);
+		$this->db->update('page');
 	
 		// Update of pages (lang table) wich links to this page
 		$sql = "update page_lang as pl
@@ -182,13 +190,15 @@ class Page_model extends Base_model
 		$this->db->query($sql);
 	
 		// Update of articles which link to this page
-		$sql = "update page_article as a
-				set a.link = '".$link_name."'
-				where a.link_type = 'page'
-				and a.link_id = " . $id_page;
+		$this->db->set('link', $link_name);
+		$this->db->where(
+			array(
+				'link_type' => 'page',
+				'link_id' => $id_page
+			)
+		);
+		$this->db->update('page_article');
 		
-		$this->db->query($sql);
-
 
 		// Update of articles (lang table) which link to this page
 		/*
@@ -339,6 +349,46 @@ class Page_model extends Base_model
 			$data[] = $result;
 		}					
 		
+		return $data;
+	}
+
+
+	/**
+	 * Returns all contexts page's lang data as an array of pages.
+	 *
+	 * @param	Mixed		ID of one article / Array of articles IDs
+	 * @param	string		Lang code
+	 *
+	 * @return	array		Array of articles
+	 *
+	 */
+	function get_lang_contexts($id_article, $lang)
+	{
+		$data = array();
+		
+		if ( ! empty($id_article))
+		{
+			$this->db->select($this->table.'.*');
+			$this->db->select($this->lang_table.'.*');
+			$this->db->select($this->context_table.'.*');
+	
+			$this->db->join($this->lang_table, $this->table.'.'.$this->pk_name.' = ' .$this->lang_table.'.'.$this->pk_name);			
+			$this->db->join($this->context_table, $this->table.'.'.$this->pk_name.' = ' .$this->context_table.'.'.$this->pk_name);			
+	
+			$this->db->where(array($this->lang_table.'.lang' => $lang));
+			
+			if ( ! is_array($id_article) )
+				$this->db->where(array($this->context_table.'.id_article' => $id_article));
+			else
+				$this->db->where($this->context_table.'.id_article in (' . implode(',', $id_article) . ')');
+	
+			$query = $this->db->get($this->table);
+	
+			if($query->num_rows() > 0)
+			{
+				$data = $query->result_array();
+			}
+		}
 		return $data;
 	}
 

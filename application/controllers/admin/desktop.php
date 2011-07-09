@@ -32,11 +32,18 @@ class Desktop extends MY_Admin
 
 	function index()
 	{
+
+		$this->get('desktop/desktop');
+	}
+	
+	
+	function get_header()
+	{
 		// Get the modules config file
 		include APPPATH . 'config/modules.php';
 
 		// Get all modules config files in modules folder
-		$config_files = glob(MODPATH . '/*/config.xml');
+		$config_files = glob(MODPATH . '*/config.xml');
 
 		// Module data to put to template
 		$moddata = array();
@@ -82,9 +89,9 @@ class Desktop extends MY_Admin
 		// Put installed module list to template
 		$this->template['modules'] = $moddata;
 
-		$this->get('desktop');
-	}
-
+		$this->get('desktop/desktop_header');
+		
+	}	
 	
 	/** 
 	 * Gets a simple view

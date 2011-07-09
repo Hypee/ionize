@@ -106,6 +106,38 @@
 		</div> <!-- /element -->
 			
 
+		<!-- Cache -->
+		<h3 class="toggler"><?=lang('ionize_title_cache')?></h3>
+		
+		<div class="element">
+		
+			<form name="cacheForm" id="cacheForm" method="post" action="<?= admin_url() ?>setting/save_cache">
+							
+				<!-- Cache Time -->
+				<dl class="small">
+					<dt>
+						<label for="cache_expiration"  title="<?=lang('ionize_help_cache_expiration')?>"><?=lang('ionize_label_cache_expiration')?></label>
+					</dt>
+					<dd>
+						<input id="cache_expiration" name="cache_expiration" class="inputtext w60" type="text" value="<?= config_item('cache_expiration') ?>" />
+						<input id="submit_cache" type="submit" class="submit m0" value="<?= lang('ionize_button_save') ?>" />
+					</dd>
+				</dl>
+				
+				<!-- Empty cache  -->
+				<dl class="small last">
+					<dt>
+						<label for="clear_cache"  title="<?=lang('ionize_help_clear_cache')?>"><?=lang('ionize_label_clear_cache')?></label>
+					</dt>
+					<dd>
+						<input id="clear_cache" type="button" class="button m0" value="<?= lang('ionize_button_clear_cache') ?>" />
+					</dd>
+				</dl>
+
+			</form>
+		</div>
+
+
 		<!-- SMTP -->
 		<h3 class="toggler"><?=lang('ionize_title_mail_send')?></h3>
 		
@@ -313,11 +345,16 @@
 
 	<h2 class="main settings" id="main-title"><?= lang('ionize_title_technical_settings') ?></h2>
 	
+	<!-- Subtitle -->
+	<div class="subtitle">
+		<p><?= lang('ionize_onchange_ionize_settings')?></p>
+	</div>
+
 	<form name="settingsForm" id="settingsForm" method="post" action="<?= admin_url() ?>setting/save_technical">
 
 
 		<!-- Google Analytics -->
-		<h3 class="toggler1"><?=lang('ionize_title_google_analytics')?></h3>
+		<h3 class="toggler1 mt20"><?=lang('ionize_title_google_analytics')?></h3>
 
 		<div class="element1">
 
@@ -335,7 +372,8 @@
 		<h3 class="toggler1"><?=lang('ionize_title_article_management')?></h3>
 
 		<div class="element1">
-			<dl class="last">
+			
+			<dl>
 				<dt>
 					<label for="texteditor"><?=lang('ionize_label_texteditor')?></label>
 				</dt>
@@ -346,7 +384,8 @@
 						<?php endforeach ;?>
 					</select>
 				</dd>
-
+			</dl>
+			<dl>
 				<!-- TinyMCE toolbar buttons -->
 				<dt>
 					<label for="texteditor" title="<?=lang('ionize_help_tinybuttons')?>"><?=lang('ionize_label_tinybuttons')?></label>
@@ -357,7 +396,69 @@
 					3 <input class="inputtext w360" id="tinybuttons3" name="tinybuttons3" type="text" value="<?= Settings::get('tinybuttons3') ?>"/><br />
 					<a id="texteditor_default"><?=lang('ionize_label_restore_tinybuttons')?></a>
 				</dd>
+				
 			</dl>
+			
+			<dl class="mt10">
+				<!-- TinyMCE Block Format (Select) -->
+				<dt>
+					<label for="texteditor" title="<?=lang('ionize_help_tinyblockformats')?>"><?=lang('ionize_label_tinyblockformats')?></label>
+				</dt>
+				<dd>
+					<input class="inputtext w360 mb5" id="tinyblockformats" name="tinyblockformats" type="text" value="<?= Settings::get('tinyblockformats') ?>"/><br />
+					<a id="texteditor_default_tinyblockformats"><?=lang('ionize_label_restore_tinyblockformats')?></a>
+				</dd>
+			</dl>
+
+			<dl class="last mt10">
+				<!-- TinyMCE Block Format (Select) -->
+				<dt>
+					<label for="article_allowed_tags" title="<?=lang('ionize_help_article_allowed_tags')?>"><?=lang('ionize_label_article_allowed_tags')?></label>
+				</dt>
+				<dd>
+					<?php
+						$tags1 = array('h2','h3','h4','h5','h6','em','img');
+						$tags2 = array('iframe','table','object','span','dl','pre','code');
+						$tags3 = array('dfn','samp','kbd','legend','q','small');
+					?>
+				
+					<table class="w220 mt0">
+						<tbody>
+							<tr>
+								<td>
+									<table class="list w60 mt0">
+										<tbody>
+											<?php foreach($tags1 as $tag) :?>
+												<tr><td class="pr10"><label for="tag_<?=$tag?>"><?=$tag?></label></td><td class="center"><input id="tag_<?=$tag?>" name="article_allowed_tags[]" <?php if(in_array($tag, $article_allowed_tags)) :?>checked="checked" <?php endif;?>type="checkbox" value="<?=$tag?>"/></td></tr>
+											<?php endforeach ?>
+										</tbody>
+									</table>
+								</td>
+								<td>
+									<table class="list w60 mt0">
+										<tbody>
+											<?php foreach($tags2 as $tag) :?>
+												<tr><td class="pr10"><label for="tag_<?=$tag?>"><?=$tag?></label></td><td class="center"><input id="tag_<?=$tag?>" name="article_allowed_tags[]" <?php if(in_array($tag, $article_allowed_tags)) :?>checked="checked" <?php endif;?>type="checkbox" value="<?=$tag?>"/></td></tr>
+											<?php endforeach ?>
+										</tbody>
+									</table>
+								</td>
+								<td>
+									<table class="list w60 mt0">
+										<tbody>
+											<?php foreach($tags3 as $tag) :?>
+												<tr><td class="pr10"><label for="tag_<?=$tag?>"><?=$tag?></label></td><td class="center"><input id="tag_<?=$tag?>" name="article_allowed_tags[]" <?php if(in_array($tag, $article_allowed_tags)) :?>checked="checked" <?php endif;?>type="checkbox" value="<?=$tag?>"/></td></tr>
+											<?php endforeach ?>
+										</tbody>
+									</table>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				
+				</dd>
+			</dl>
+
 		</div>
 
 		<!-- Media management -->
@@ -387,40 +488,6 @@
 			</dl>
 	
 			<!-- Supported media extensions, by media type -->
-			<dl>
-				<dt>
-					<label for="media_type_picture" title="<?=lang('ionize_help_setting_media_type_picture')?>"><?=lang('ionize_label_media_type_picture')?></label>
-				</dt>
-				<dd>
-					<input name="media_type_picture" id="media_type_picture" class="inputtext w240" type="text" value="<?= Settings::get('media_type_picture') ?>"/>
-				</dd>
-			</dl>
-			<dl>
-				<dt>
-					<label for="media_type_music" title="<?=lang('ionize_help_setting_media_type_music')?>"><?=lang('ionize_label_media_type_music')?></label>
-				</dt>
-				<dd>
-					<input name="media_type_music" id="media_type_music" class="inputtext w240" type="text" value="<?= Settings::get('media_type_music') ?>"/>
-				</dd>
-			</dl>
-			<dl>
-				<dt>
-					<label for="media_type_video" title="<?=lang('ionize_help_setting_media_type_video')?>"><?=lang('ionize_label_media_type_video')?></label>
-				</dt>
-				<dd>
-					<input name="media_type_video" id="media_type_video" class="inputtext w240" type="text" value="<?= Settings::get('media_type_video') ?>"/>
-				</dd>
-			</dl>
-	
-			<dl class="mb10">
-				<dt>
-					<label for="media_type_file" title="<?=lang('ionize_help_setting_media_type_file')?>"><?=lang('ionize_label_media_type_file')?></label>
-				</dt>
-				<dd>
-					<input name="media_type_file" id="media_type_file" class="inputtext w240" type="text" value="<?= Settings::get('media_type_file') ?>"/>
-				</dd>
-			</dl>
-
 			<dl class="last">
 				<dt>
 					<label for="picture_max_width" title="<?=lang('ionize_help_setting_picture_max_width')?>"><?=lang('ionize_label_setting_picture_max_width')?></label>
@@ -448,6 +515,52 @@
 			</dl>
 
 		</div>
+
+		<!-- Allowed Mimes -->
+		<h3 class="toggler1"><?=lang('ionize_title_allowed_mimes')?></h3>
+
+		<div class="element1">
+		
+		
+			<?php
+				$filemanager_file_types = explode(',',Settings::get('filemanager_file_types'));
+			?>
+
+			<?php foreach($mimes as $type => $mime_list) :?>
+			
+				<h4><?= $type ?></h4>
+
+		
+				<table class="list w340">
+					<thead>
+						<tr>
+							<th class="right"></th>
+							<th>Mime</th>
+							<th class="center">Allowed ?</th>
+						</tr>
+					</thead>
+					<tbody>
+
+						<?php foreach($mime_list as $ext => $mime) :?>
+						
+								<tr>
+									<td class="right pr10"><?= $ext ?> </td>
+									<td>
+										<label for="allowed_type_<?= $ext ?>" class="m0"><?= $mime ?></label>
+									</td>
+									<td class="center">
+										<input <?php if(in_array($ext, $filemanager_file_types)) :?>checked="checked" <?php endif ;?>id="allowed_type_<?= $ext ?>" class="inputcheckbox" name="allowed_type[]" type="checkbox" value="<?= $ext ?>" />
+									</td>
+								</tr>
+						<?php endforeach ;?>
+
+					</tbody>
+				</table>
+			
+			<?php endforeach ;?>
+		
+		</div>
+
 
 		<!-- Thumbnails -->
 		<?php if ( ! empty($thumbs)) :?>
@@ -591,8 +704,8 @@
 				</dd>
 			</dl>
 		
-		
 		</div>
+		
 	</form>
 	
 	<!-- Admin URL -->
@@ -610,6 +723,22 @@
 	
 	</div>
 	
+	<!-- Encryption key -->
+	<h3 class="toggler1"><?=lang('ionize_title_encryption_key')?></h3>
+
+	<div class="element1">
+	
+		<!-- Current key -->
+		<dl class="last">
+			<dt>
+				<label for="form_antispam_key"></label>
+			</dt>
+			<dd>
+				<span><?= config_item('encryption_key') ?></span>
+			</dd>
+		</dl>
+	
+	</div>
 	
 
 	
@@ -623,51 +752,61 @@
 	 * Panel toolbox
 	 *
 	 */
-	MUI.initToolbox('setting_technical_toolbox');
+	ION.initToolbox('setting_technical_toolbox');
 
 
 	/**
 	 * Options Accordion
 	 *
 	 */
-	MUI.initAccordion('.toggler', 'div.element');
-	MUI.initAccordion('.toggler1', 'div.element1');
+	ION.initAccordion('.toggler', 'div.element', true, 'settingsAccordion1');
+	ION.initAccordion('.toggler1', 'div.element1', false, 'settingsAccordion2');
 
 	/**
 	 * Init help tips on label
 	 *
 	 */
-	MUI.initLabelHelpLinks('#settingsForm');
+	ION.initLabelHelpLinks('#settingsForm');
+	ION.initLabelHelpLinks('#cacheForm');
 
 
 	/**
 	 * Database form action
-	 * see mocha/init-forms.js for more information about this method
+	 * see ionize-form.js for more information about this method
 	 */
-	MUI.setFormSubmit('databaseForm', 'submit_database', 'setting/save_database/true', 'mainPanel', 'setting/technical');
+	ION.setFormSubmit('databaseForm', 'submit_database', 'setting/save_database/true', 'mainPanel', 'setting/technical');
 
 	/**
 	 * New Thumb form action
-	 * see mocha/init-forms.js for more information about this method
+	 * see ionize-form.js for more information about this method
 	 */
-	MUI.setFormSubmit('thumbForm', 'submit_thumb', 'setting/save_thumb/true', 'mainPanel', 'setting/technical');
+	ION.setFormSubmit('thumbForm', 'submit_thumb', 'setting/save_thumb/true', 'mainPanel', 'setting/technical');
 
 	/**
 	 * SMTP form action
-	 * see mocha/init-forms.js for more information about this method
+	 * see ionize-form.js for more information about this method
 	 */
-	MUI.setFormSubmit('smtpForm', 'submit_smtp', 'setting/save_smtp/true', 'mainPanel', 'setting/technical');
+	ION.setFormSubmit('smtpForm', 'submit_smtp', 'setting/save_smtp/true', 'mainPanel', 'setting/technical');
+	
+	/**
+	 * Cache form action
+	 */
+	ION.setFormSubmit('cacheForm', 'submit_cache', 'setting/save_cache', 'mainPanel', 'setting/technical');
+
+
+	ION.initRequestEvent($('clear_cache'), 'setting/clear_cache');
+
 
 	/**
 	 * Admin URL form action
-	 * see mocha/init-forms.js for more information about this method
+	 * see ionize-form.js for more information about this method
 	 */
-	MUI.addConfirmation(
+	ION.addConfirmation(
 		'changeAdminUrl', 
 		'submit_admin_url',
 		function()
 		{
-			MUI.sendData('setting/save_admin_url', $('adminUrlForm'))
+			ION.sendData('setting/save_admin_url', $('adminUrlForm'))
 		},
 		Lang.get('ionize_confirm_change_admin_url')
 	);
@@ -683,16 +822,17 @@
 	});
 
 
+
 	/** 
 	 * Add Confirmation window on thumb delete icons
-	 * See mocha/init-windows.js for more information about this method
+	 * See ionize_window.js for more information about this method
 	 *
 	 */
 	$('thumbs').getElements('div').each(function(item)
 	{
 		var id = item.id;
 		
-		MUI.addConfirmation('confirm' + id, 
+		ION.addConfirmation('confirm' + id, 
 							'delThumb_' + id, 
 							'setting/delete_thumb/' + id, 
 							'ionize_confirm_element_delete'
@@ -710,6 +850,13 @@
 		$('tinybuttons3').value = 'tablecontrols';
 	
 	});
+
+	$('texteditor_default_tinyblockformats').addEvent('click', function()
+	{
+		$('tinyblockformats').value = 'p,h2,h3,h4,h5,pre';
+	});
+
+
 
 	
 	/**
@@ -733,15 +880,15 @@
 
 	/**
 	 * Notification to reload admin panel after changing filemanager/texteditor
-	 */
 	$('filemanager').addEvent('change', function()
 	{
-		MUI.information('<?php echo lang('ionize_onchange_filemanager') ;?>');
+		ION.information('<?php echo lang('ionize_onchange_filemanager') ;?>');
 	});
 
 	$('texteditor').addEvent('change', function()
 	{
-		MUI.information('<?php echo lang('ionize_onchange_texteditor') ;?>');
+		ION.information('<?php echo lang('ionize_onchange_texteditor') ;?>');
 	});
+	 */
 
 </script>

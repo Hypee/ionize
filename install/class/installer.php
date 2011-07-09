@@ -122,20 +122,35 @@ class Installer
 		 * Folder access rights checks
 		 *
 		 */
-		// Config folder
-		$this->template['write_config_dir'] = $this->_test_dir(ROOTPATH . 'application/config');
 
-		// Config folder files
-		$this->template['write_config_config'] = is_really_writable(ROOTPATH . 'application/config/config.php');
-		$this->template['write_config_database'] = is_really_writable(ROOTPATH . 'application/config/database.php');
-		$this->template['write_config_email'] = is_really_writable(ROOTPATH . 'application/config/email.php');
-		$this->template['write_config_language'] = is_really_writable(ROOTPATH . 'application/config/language.php');
+		// Check files rights
+		$files = array(
+			'application/config/config.php',
+			'application/config/database.php',
+			'application/config/email.php',
+			'application/config/language.php',
+			'application/config/modules.php'
+		);
 
-		// Users files path
-		$this->template['write_files'] = $this->_test_dir(ROOTPATH . 'files', true);
+		$check_files = array();
+		foreach($files as $file)
+			$check_files[$file] = is_really_writable(ROOTPATH . $file);
 
-		// Theme path
-		$this->template['write_themes'] = $this->_test_dir(ROOTPATH . 'themes', true);
+		// Check folders rights
+		$folders = array(
+			'application/config',
+			'files',
+			'themes'
+		);
+		
+		$check_folders = array();
+		foreach($folders as $folder)
+			$check_folders[$folder] = $this->_test_dir(ROOTPATH . $folder, true);
+		
+		
+		$this->template['check_files'] = $check_files;
+		$this->template['check_folders'] = $check_folders;
+
 		
 		/*
 		 * Message to user if one setting is false
@@ -218,6 +233,10 @@ class Installer
 			if ($config['encryption_key'] == '')
 			{
 				$this->template['encryption_key'] = $this->generateEncryptKey();
+			}
+			else
+			{
+//				$this->template['encryption_key'] =$config['encryption_key'];
 			}
 			
 			$this->output('user');
@@ -373,6 +392,7 @@ class Installer
 		
 			if ( ! empty($migration_files))
 			{
+				if (in_array('migration_0.9.6_0.9.7.xml', $migration_files)) $this->template['database_migration_from'] = lang('database_migration_from') . '<b class="highlight2">0.9.6</b>';			
 				if (in_array('migration_0.9.5_0.9.6.xml', $migration_files)) $this->template['database_migration_from'] = lang('database_migration_from') . '<b class="highlight2">0.9.5</b>';			
 				if (in_array('migration_0.9.4_0.9.5.xml', $migration_files)) $this->template['database_migration_from'] = lang('database_migration_from') . '<b class="highlight2">0.9.4</b>';			
 				if (in_array('migration_0.93_0.9.4.xml', $migration_files)) $this->template['database_migration_from'] = lang('database_migration_from') . '<b class="highlight2">0.9.3</b>';			
@@ -391,7 +411,6 @@ class Installer
 		}
 		else
 		{
-	
 			$this->db_connect();
 	
 			/*
@@ -456,9 +475,14 @@ class Installer
 			{
 				// Get the encryption key and move it to config/config.php
 				$enc = false;
+				$config = array();
 				
-				include(ROOTPATH . 'application/config/access.php');
-				if ($config['encrypt_key'] != '')
+				if (is_file(ROOTPATH . 'application/config/access.php'))
+				{
+					include(ROOTPATH . 'application/config/access.php');
+				}
+				
+				if ( ! empty($config['encrypt_key']) &&  $config['encrypt_key'] != '')
 				{
 					$enc =  $config['encrypt_key'];
 				}
@@ -495,7 +519,7 @@ class Installer
 						foreach ($query->result_array() as $user)
 						{
 							$pass = $this->_decrypt094($user['password'], $user);
-							$enc = $this->_encrypt095($pass, $user);
+							$enc = $this->_encrypt($pass, $user);
 											
 							$user['password'] = $enc;
 						
@@ -509,12 +533,78 @@ class Installer
 					$this->_send_error('user', lang('no_encryption_key_found'), $_POST);
 				}
 			}
+
+			/*
+			 * Migration to 0.9.7
+			 * Migration to CI2
+			 *
+			 */
+			if (in_array('migration_0.9.6_0.9.7.xml', $migration_files))
+			{
+				// Updates the users account
+				$query = $this->db->get('users');
+				
+				if ($query->num_rows() > 0)
+				{
+					foreach ($query->result_array() as $user)
+					{
+						$old_decoded_pass = $this->_decrypt096($user['password'], $user);
+						$encoded_pass = $this->_encrypt($old_decoded_pass, $user);
+						
+						$user['password'] = $encoded_pass;
+						$this->db->where('username', $user['username']);
+						$this->db->update('users', $user);
+					}						
+				}
+			}
+
 	
 			GLOBAL $base_url;
 			header("Location: ".$base_url.'install/?step=user&lang='.$this->template['lang'], TRUE, 302);
 		}
 	}
 
+	function migrate_users_to_ci2()
+	{
+		$this->db_connect();
+		
+		// Updates the users account
+		$query = $this->db->get('users');
+		
+		if ($query->num_rows() > 0)
+		{
+			foreach ($query->result_array() as $user)
+			{
+				$old_decoded_pass = $this->_decrypt096($user['password'], $user);
+				$encoded_pass = $this->_encrypt($old_decoded_pass, $user);
+				
+				$user['password'] = $encoded_pass;
+				$this->db->where('username', $user['username']);
+				$this->db->update('users', $user);
+				
+				echo($user['username'] . ' : ' . 'done<br/>');
+			}						
+		}
+	}
+
+	function show_password()
+	{
+		$this->db_connect();
+		
+		// Updates the users account
+		$query = $this->db->get('users');
+		
+		if ($query->num_rows() > 0)
+		{
+			foreach ($query->result_array() as $user)
+			{
+				$decoded_pass = $this->_decrypt($user['password'], $user);
+
+				var_dump($decoded_pass);
+			}						
+		}
+	
+	}
 
 	// --------------------------------------------------------------------
 
@@ -1000,7 +1090,7 @@ class Installer
 		// Here is everything OK, we can create the user
 		$data['join_date'] = date('Y-m-d H:i:s');
 		$data['salt'] = $this->get_salt();
-		$data['password'] = $this->_encrypt095($data['password'], $data);
+		$data['password'] = $this->_encrypt($data['password'], $data);
 		$data['id_group'] = '1';
 		
 		// Clean data array
@@ -1206,6 +1296,8 @@ class Installer
 				$migration_xml[] = 'migration_0.92_0.93.xml';
 				$migration_xml[] = 'migration_0.93_0.9.4.xml';
 				$migration_xml[] = 'migration_0.9.4_0.9.5.xml';
+				$migration_xml[] = 'migration_0.9.5_0.9.6.xml';
+				$migration_xml[] = 'migration_0.9.6_0.9.7.xml';
 			}
 	
 			
@@ -1235,6 +1327,8 @@ class Installer
 					$migration_xml[] = 'migration_0.92_0.93.xml';
 					$migration_xml[] = 'migration_0.93_0.9.4.xml';
 					$migration_xml[] = 'migration_0.9.4_0.9.5.xml';
+					$migration_xml[] = 'migration_0.9.5_0.9.6.xml';
+					$migration_xml[] = 'migration_0.9.6_0.9.7.xml';
 				}
 			}
 	
@@ -1261,6 +1355,8 @@ class Installer
 				{
 					$migration_xml[] = 'migration_0.93_0.9.4.xml';
 					$migration_xml[] = 'migration_0.9.4_0.9.5.xml';
+					$migration_xml[] = 'migration_0.9.5_0.9.6.xml';
+					$migration_xml[] = 'migration_0.9.6_0.9.7.xml';
 				}
 			}
 
@@ -1284,6 +1380,8 @@ class Installer
 				if ($migrate_from == true)
 				{
 					$migration_xml[] = 'migration_0.9.4_0.9.5.xml';
+					$migration_xml[] = 'migration_0.9.5_0.9.6.xml';
+					$migration_xml[] = 'migration_0.9.6_0.9.7.xml';
 				}
 			}
 
@@ -1306,6 +1404,29 @@ class Installer
 				if ($migrate_from == true)
 				{
 					$migration_xml[] = 'migration_0.9.5_0.9.6.xml';
+					$migration_xml[] = 'migration_0.9.6_0.9.7.xml';
+				}
+			}
+			
+			/*
+			 * From Ionize 0.9.6 : the table extend_field does not contains the field id_element_definition
+			 *
+			 */
+			if (empty($migration_xml))
+			{
+				$migrate_from = true;
+				
+				$fields = $this->db->field_data('extend_field');
+	
+				foreach ($fields as $field)
+				{
+					if ($field->name == 'id_element_definition')
+						$migrate_from = false;
+				}
+				
+				if ($migrate_from == true)
+				{
+					$migration_xml[] = 'migration_0.9.6_0.9.7.xml';
 				}
 			}
 		}
@@ -1559,6 +1680,35 @@ class Installer
 	// --------------------------------------------------------------------
 
 
+	function _decrypt($str, $data)
+	{
+		require_once('./class/Encrypt.php');
+		
+		include(APPPATH.'config/config.php');
+		
+		$encrypt = new ION_Encrypt($config);
+
+		$hash 	= $encrypt->sha1($data['username'] . $data['salt']);
+		$key 	= $encrypt->sha1($config['encryption_key'] . $hash);
+		
+		return $encrypt->decode($str, substr($key, 0, 56));
+	}
+
+	function _decrypt096($str, $data)
+	{
+		require_once('./class/Encrypt.php');
+		
+		include(APPPATH.'config/config.php');
+		
+		$encrypt = new ION_Encrypt($config);
+
+		$hash 	= $encrypt->sha1($data['username'] . $data['salt']);
+		$key 	= $encrypt->sha1($config['encryption_key'] . $hash);
+		
+		return $encrypt->old_decode($str, substr($key, 0, 56));
+	}
+
+
 	/**
 	 * Encrypts one password, based on the encrypt key set in config/connect.php
 	 *
@@ -1567,7 +1717,7 @@ class Installer
 	 * @return	string		Encrypted password
 	 *
 	 */
-	function _encrypt095($str, $data)
+	function _encrypt($str, $data)
 	{
 		require_once('./class/Encrypt.php');
 		
@@ -1581,21 +1731,6 @@ class Installer
 		return $encrypt->encode($str, substr($key, 0, 56));
 	}
 
-/* Just for debug
-	function _decrypt095($str, $data)
-	{
-		require_once('./class/Encrypt.php');
-		
-		include(APPPATH.'config/connect.php');
-		
-		$encrypt = new ION_Encrypt($config);
-
-		$hash 	= $encrypt->sha1($data['username'] . $data['salt']);
-		$key 	= $encrypt->sha1($config['encryption_key'] . $hash);
-		
-		return $encrypt->decode($str, substr($key, 0, 56));
-	}
-*/
 
 	// --------------------------------------------------------------------
 

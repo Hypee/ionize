@@ -59,26 +59,65 @@ Drag.Clone = new Class({
 		opacity: 1,
 		revert: false,
 		handle: false,
-		precalculate: true,
+		precalculate: false,
 		style: false,
 		classe: false,			// 'class' hangs on Webkit
 		'width': false,			//
-		'height': false		//
-
+		'height': false,		//
+		container: ''
 	},
 	
 	initialize: function(element, options)
 	{
 		this.setOptions(options);
-		this.idle = true;
-		
-		if (this.options.revert) this.effect = new Fx.Morph(null, $merge({duration: 250, link: 'cancel'}, this.options.revert));
-		
-		(this.options.handle ? element.getElement(this.options.handle) || element : element).addEvent('mousedown', this.start.bindWithEvent(this, element));
-		
-		if ($type(this.options.droppables) == 'string')
+
+		if ( ! element.retrieve('DragClone'))
 		{
-			this.options.droppables = (this.options.droppables).replace(' ', '').split(",");
+			this.idle = true;
+			
+			if (this.options.revert) this.effect = new Fx.Morph(null, Object.merge({},{duration: 250, link: 'cancel'}, this.options.revert));
+		
+			(this.options.handle ? element.getElement(this.options.handle) || element : element).addEvent('mousedown', function(event)
+			{
+				this.start(event, element);
+			}.bind(this));
+		
+			this.dropClasses = this.options.droppables;
+			if (typeOf(this.dropClasses) == 'string')
+			{
+				this.dropClasses = (this.dropClasses).split(',');
+			}
+			
+			element.store('DragClone', this);
+		}
+		else
+		{
+			var dc = element.retrieve('DragClone');
+			
+			var dropClasses = this.options.droppables;
+			if (typeOf(dropClasses) == 'string')
+			{
+				dropClasses = (dropClasses).split(',');
+			}
+			
+			dropClasses.each(function(item)
+			{
+				if ((dc.dropClasses).contains(item) == false)
+				{
+					dc.options.droppables = dc.options.droppables + ',' + item;
+					(dc.dropClasses).push(item);
+				}
+			});
+			
+			var dropCallbacks = (this.options.dropCallbacks).split(',');
+			var dcDropCallbacks = (dc.options.dropCallbacks).split(',');
+			dropCallbacks.each(function(item)
+			{
+				if (dcDropCallbacks.contains(item) == false)
+				{
+					dc.options.dropCallbacks = dc.options.dropCallbacks + ',' + item
+				}
+			});
 		}
 	},
 
@@ -87,21 +126,24 @@ Drag.Clone = new Class({
 		if (!this.idle) return;
 		this.idle = false;
 		this.element = element;
-		this.opacity = element.get('opacity');
+		this.opacity = element.getStyle('opacity');
 		this.clone = this.getClone(event, element);
+
+		this.droppables = $$(this.options.droppables);
 
 		this.drag = new Drag.Move(this.clone, {
 			snap: this.options.snap,
-			droppables: this.options.droppables,
+			droppables: this.droppables,
+			container: this.options.container,
 			onSnap: function(){
 				event.stop();
-				this.element.set('opacity', this.options.opacity || 0);
+				this.element.setStyle('opacity', this.options.opacity || 0);
 				this.clone.setStyle('visibility', 'visible');
-//				this.clone.set('opacity', this.options.opacity || 0);
 				this.snapped(this.clone);
 			}.bind(this),
 			onDrag: this.dragged.bind(this),
 			onDrop: this.dropped.bind(this),
+
 			onEnter: this.entered.bind(this),
 			onLeave: this.leaved.bind(this),
 			onCancel: this.reset.bind(this),
@@ -111,37 +153,22 @@ Drag.Clone = new Class({
 		this.drag.start(event);
 	},
 
-
 	end: function()
 	{
 		this.drag.detach();
-		this.element.set('opacity', this.opacity);
+		this.element.setStyle('opacity', this.opacity);
 		this.reset();
-/*
-		if (this.effect){
-			var dim = this.element.getStyles('width', 'height');
-			var pos = this.clone.computePosition(this.element.getPosition(this.clone.offsetParent));
-			this.effect.element = this.clone;
-			this.effect.start({
-				top: pos.top,
-				left: pos.left,
-				width: dim.width,
-				height: dim.height,
-				opacity: 0.25
-			}).chain(this.reset.bind(this));
-		}
-		else
-		{
-			this.reset();
-		}
-*/
 	},
 
 	reset: function()
 	{
 		this.idle = true;
-		this.clone.destroy();
-		this.fireEvent('complete', this.element);
+		
+		// IE : Delays the clone destroy. 150ms doesn't affect the visual rendering on other browsers.
+		(function(){
+			this.clone.destroy();
+			this.fireEvent('complete', this.element);
+		}).delay(150, this);	
 	},
 	
 	dragged: function(element, event) { this.fireEvent('drag', [element, event]); },
@@ -152,9 +179,8 @@ Drag.Clone = new Class({
 
 	getClone: function(event, element)
 	{
-		if ($type(this.options.clone) == 'function') return this.options.clone.call(this, event, element);
+		if (typeOf(this.options.clone) == 'function') return this.options.clone.call(this, event, element);
 
-//		var dim = element.getSize();
 		var dim = element.getDimensions();
 		var dim = element.getComputedSize();
 
@@ -163,9 +189,7 @@ Drag.Clone = new Class({
 			'top': element.getCoordinates()['top'],
 			'left': element.getCoordinates()['left'],
 			'visibility': 'hidden',
-/*			'width': dim.width + 5 + 'px', */
 			'width': dim.totalWidth + 10 + 'px',
-//			'height': dim.totalHeight + 3 + 'px',
 			'display': 'block',
 			'z-index': 10000
 		});
@@ -180,7 +204,8 @@ Drag.Clone = new Class({
 				input.set('name', 'clone_' + i);
 			});
 		}
-		return clone.inject(document.body);
+		clone.inject(document.body);
+		return clone;
 	}
 
 });

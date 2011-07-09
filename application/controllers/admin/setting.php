@@ -102,6 +102,11 @@ class Setting extends MY_admin
 				$this->template['filemanagers'][] = $f;
 //			}
 		}
+		
+		// Mimes types
+		$mimes = Settings::get_mimes_types();
+		
+		$this->template['mimes'] = $mimes;
 
 		/* 
 		 * Database settings
@@ -143,8 +148,14 @@ class Setting extends MY_admin
 		$this->template['thumbs'] = $this->settings_model->get_list(array('name like' => 'thumb_%'));
 		
 		
+		// Cache
+		$this->template['cache_enabled'] = config_item('cache_enabled');
+		$this->template['cache_time'] = config_item('cache_time');
+		
 		// Antispam key
 		$this->template['form_antispam_key'] = config_item('form_antispam_key');
+
+		$this->template['article_allowed_tags'] = explode(',', Settings::get('article_allowed_tags') );
 
 		$this->output('setting_technical');
 	}
@@ -366,7 +377,7 @@ class Setting extends MY_admin
 
 
 		// Other Settings to save
-		$settings = array('show_help_tips', 'display_connected_label', 'date_format');
+		$settings = array('show_help_tips', 'display_connected_label', 'date_format', 'default_admin_lang');
 
 		// Save settings to DB
 		$this->_save_settings($settings);
@@ -411,25 +422,20 @@ class Setting extends MY_admin
 	function save_technical()
 	{
 		$this->load->model('config_model', '', true);
+		$this->load->helper('string_helper');
 
 		// Settings to save
-		$settings = array(	'texteditor', 'filemanager', 'files_path', 'cache', 'cache_time', 
+		$settings = array(	'texteditor', 'filemanager', 'files_path', 
 							'ftp_dir', 'ftp_host', 'ftp_user', 'ftp_password', 
-							'tinybuttons1','tinybuttons2','tinybuttons3',
+							'tinybuttons1','tinybuttons2','tinybuttons3','tinyblockformats',
 							'google_analytics', 'system_thumb_list', 'system_thumb_edition','media_thumb_size', 'picture_max_width', 'picture_max_height',
-							'use_extend_fields');
+							'use_extend_fields', 'filemanager_file_types');
 							
-		// Medias extensions to save			
-		$settings_extension = array('media_type_picture', 'media_type_video', 'media_type_music', 'media_type_file');
+		
+		// Allowed filemanager file extensions
+		$filemanager_file_types = $this->input->post('allowed_type');
+		$this->input->set_post('filemanager_file_types', implode(',', $filemanager_file_types));
 
-		foreach ($settings_extension as $setting)
-		{	
-			if ($this->input->post($setting))
-			{
-				$this->input->set_post($setting, str_replace(' ', '', strtr(trim($this->input->post($setting), ",/\-_"), '/\-_', '')));
-				$settings[] = $setting;
-			}
-		}
 
 		// Get the old media path before saving
 		$old_files_path = Settings::get('files_path');
@@ -458,8 +464,11 @@ class Setting extends MY_admin
 			$this->input->set_post('files_path', $old_files_path);
 		}
 
+
 		// Save settings to DB
 		$this->_save_settings($settings);
+
+
 
 		// Thumbs update
 		$thumbs  = $this->settings_model->get_list(array('name like' => 'thumb_%'));
@@ -495,7 +504,7 @@ class Setting extends MY_admin
 		
 		// Antispam key
 		$config_items = array('form_antispam_key');
-		
+
 		foreach($config_items as $config_item)
 		{
 			if (config_item($config_item) != $this->input->post($config_item) )
@@ -505,6 +514,23 @@ class Setting extends MY_admin
 			}
 		
 		}
+		
+		// Tags allowed in articles
+		$tags = $this->input->post('article_allowed_tags');
+		if (in_array('table', $tags)) $tags = array_merge($tags, array('thead','tbody','tfoot','tr','th','td'));
+		if (in_array('object', $tags)) $tags = array_merge($tags, array('param', 'embed'));
+		if (in_array('dl', $tags)) $tags = array_merge($tags, array('dt','dd'));
+		if (in_array('img', $tags)) $tags = array_merge($tags, array('map'));
+		
+		// Standard allowed tags
+		$tags = array_merge($tags, array('p','a','ul','ol','li','br','b','strong'));
+		
+		$article_allowed_tags = array(
+					'name' => 'article_allowed_tags',
+					'content' => implode(',', $tags)
+				);
+		$this->settings_model->save_setting($article_allowed_tags);
+
 		
 		$this->callback = array(
 			'fn' => 'ION.reload',
@@ -653,6 +679,47 @@ class Setting extends MY_admin
 	// ------------------------------------------------------------------------
 
 
+	/**
+	 * Saves the Cache settings
+	 *
+	 */
+	function save_cache()
+	{
+		$this->load->model('config_model', '', true);
+
+		if (config_item('cache_expiration') !== $this->input->post('cache_expiration') )
+		{
+			if ($this->config_model->change('ionize.php', 'cache_expiration', $this->input->post('cache_expiration')) == FALSE)
+				$this->error(lang('ionize_message_error_writing_ionize_file'));				
+		}
+
+		if ( ! $this->input->post('cache_expiration'))
+		{
+			Cache()->clear_cache();
+		}
+
+		// UI panel to update after saving
+		$this->update[] = array(
+			'element' => 'mainPanel',
+			'url' => admin_url() . 'setting/technical'
+		);
+
+		// Answer
+		$this->success(lang('ionize_message_cache_saved'));				
+	}
+
+	function clear_cache()
+	{
+		Cache()->clear_cache();
+
+		// Answer
+		$this->success(lang('ionize_message_cache_cleared'));				
+		
+	}
+
+	// ------------------------------------------------------------------------
+
+
 	function save_admin_url()
 	{
 		$this->load->model('config_model', '', true);
@@ -793,7 +860,7 @@ class Setting extends MY_admin
 				// UI panel to update after saving : Structure panel
 				$this->update[] = array(
 					'element' => 'structurePanel',
-					'url' => admin_url() . 'core/get_structure'
+					'url' => admin_url() . 'tree'
 				);
 
 				$this->success(lang('ionize_message_database_saved'));				

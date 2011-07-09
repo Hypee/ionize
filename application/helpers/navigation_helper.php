@@ -45,7 +45,7 @@ if( ! function_exists('get_navigation'))
 		
 		foreach($items as $key => $page)
 		{
-			$active = ( ! empty($page['active_class'])) ? ' class="'.$page['active_class'].'"' : '';
+			$active = ( ! empty($page['active_class'])) ? ' class="'.$page['active_class'].'" ' : '';
 			
 			// Adds the suffix if defined in /application/config.php
 			if ( config_item('url_suffix') != '' ) $url .= config_item('url_suffix');
@@ -69,7 +69,7 @@ if( ! function_exists('get_navigation'))
  */
 if( ! function_exists('get_tree_navigation'))
 {
-	function get_tree_navigation($items, $lang_url=false, $id = NULL, $class = NULL)
+	function get_tree_navigation($items, $lang_url=false, $id = NULL, $class = NULL, $first_class = NULL, $last_class = NULL)
 	{
 		// HTML Attributes
 		$id = ( ! is_null($id) ) ? ' id="' . $id . '" ' : '';
@@ -77,11 +77,24 @@ if( ! function_exists('get_tree_navigation'))
 
 		$tree = '<ul' . $id . $class . '>';
 		
+		
 		foreach($items as $key => $page)
 		{
-			$active = ( ! empty($page['active_class'])) ? ' class="'.$page['active_class'].'"' : '';
-
-			$tree .= '<li><a'.$active.' href="' . $page['absolute_url'] . '">'.$page['title']. '</a>';
+			$class = array();
+			if (( ! empty($page['active_class']))) $class[] = $page['active_class'];
+			if ($key == 0 && ! is_null($first_class)) $class[] = $first_class;
+			if ($key == (count($items) - 1) && ! is_null($last_class)) $class[] = $last_class;
+			
+			if ( ! empty($class))
+			{
+				$class = ' class="'.implode(' ', $class).'"';
+			}
+			else
+			{
+				$class = '';
+			}
+			
+			$tree .= '<li'.$class.'><a'.$class.' href="' . $page['absolute_url'] . '">'.$page['title']. '</a>';
 	
 			if (!empty($page['children']))
 				 $tree .= get_tree_navigation($page['children'], $lang_url);
@@ -114,12 +127,46 @@ if( ! function_exists('get_language_navigation'))
 		
 		foreach($items as $key => $lang)
 		{
-			$active = ( ! empty($lang['active_class'])) ? ' class="'.$lang['active_class'].'"' : '';
+			$active = ( ! empty($lang['active_class'])) ? ' class="'.$lang['active_class'].'" ' : '';
 			
 			$nav .= '<li' . $active . '><a ' . $active . 'href="' . $lang['url'] . '">' . $lang['name']. '</a></li>';
 		}
 		
 		return $nav;
+	}
+}
+
+
+/**
+ * Returns the previous / next page enclosed in the given tag
+ *
+ */
+if( ! function_exists('get_next_prev_page'))
+{
+	function get_next_prev_page($page, $prefix)
+	{
+		$prefix = (lang($prefix) != '#'.$prefix ) ? lang($prefix) : $prefix;
+		
+		$link = $prefix. '<a href="' . $page['absolute_url'] . '">' . $page['title']. '</a>';
+		
+		return $link;
+	}
+}
+
+
+/**
+ * Returns the previous / next article enclosed in the given tag
+ * 
+ */
+if( ! function_exists('get_next_prev_article'))
+{
+	function get_next_prev_article($article, $prefix)
+	{
+		$prefix = (lang($prefix) != '#'.$prefix ) ? lang($prefix) : $prefix;
+		
+		$link = $prefix. '<a href="' . $article['absolute_url'] . '">' . $article['title']. '</a>';
+		
+		return $link;
 	}
 }
 

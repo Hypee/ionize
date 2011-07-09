@@ -10,20 +10,20 @@
 
 	/**
 	 * Views form
-	 * see mocha/init-forms.js for more information about this method
+	 * see ionize-form.js for more information about this method
 	 */
-	MUI.setFormSubmit('ionizeSettingsForm', 'ionizeSettingsFormSubmit', 'setting/save_ionize');
+	ION.setFormSubmit('ionizeSettingsForm', 'ionizeSettingsFormSubmit', 'setting/save_ionize');
 
 	/**
 	 * Options show / hide button
 	 *
 	 */
-	MUI.initSideColumn();
+	ION.initSideColumn();
 
 	/**
 	 * Save with CTRL+s
 	 *
 	 */
-	MUI.addFormSaveEvent('ionizeSettingsForm');
+	ION.addFormSaveEvent('ionizeSettingsForm');
 
 </script>

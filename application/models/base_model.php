@@ -22,7 +22,7 @@
  *
  */
 
-class Base_model extends Model 
+class Base_model extends CI_Model 
 {
 	/*
 	 * Stores if this model is already loaded or not.
@@ -148,7 +148,7 @@ class Base_model extends Model
 	 */
 	public function __construct()
 	{
-		parent::Model();
+		parent::__construct();
 
 		if(self::$_inited)
 		{
@@ -340,13 +340,26 @@ class Base_model extends Model
 		}
 
 		if ( !empty ($where) )
-			$this->db->where($where);
+		{
+			foreach($where as $cond => $value)
+			{
+				if (is_string($cond))
+				{
+					$this->db->where($cond, $value);
+				}
+				else
+				{
+					$this->db->where($value);
+				}
+			}
+		}
+//			$this->db->where($where, FALSE);
 
 
 		$this->db->select($table.'.*');
 		
 		$query = $this->db->get($table);
-				
+
 		if ( $query->num_rows() > 0 )
 			$data = $query->result_array();
 
@@ -400,7 +413,7 @@ class Base_model extends Model
 	 *	@return	array	The complete arrayList of element, including medias
 	 *
 	 */
-	function get_lang_list($where=false, $lang=NULL, $limit=false, $like=false)
+	function get_lang_list($where = FALSE, $lang = NULL)
 	{
 		$data = array();
 
@@ -414,6 +427,15 @@ class Base_model extends Model
 			}
 		}
 
+		if (isset($where['where_in']))
+		{
+			foreach($where['where_in'] as $key => $value)
+			{
+				$this->db->where_in($key, $value);
+			}
+			unset($where['where_in']);
+		}
+		
 		// Make sure we have only one time each element
 		$this->db->distinct();
 
@@ -435,8 +457,6 @@ class Base_model extends Model
 		}
 	
 		$query = $this->db->get($this->table);
-
-// trace($this->db->last_query());
 
 		if($query->num_rows() > 0)
 		{
@@ -564,26 +584,36 @@ class Base_model extends Model
 	 * @param	String		Parent table name
 	 * @param	String		Child table name
 	 * @param	Array		Array of conditions
+	 * @param	int			Data from first or second table. Default 1
 	 * @param	String		Link table prefix. Default to ''
 	 *
 	 * @return	array		Array of Hashtable
 	 *
 	 */
-	function get_linked_items($parent_table, $child_table, $cond, $prefix = '')
+	function get_linked_items($first_table, $second_table, $cond, $join=1, $prefix = '')
 	{
 		$data = array();
 		
-		$child_pk_name = $this->get_pk_name($child_table);
+		$second_pk_name = $this->get_pk_name($second_table);
+		$first_pk_name = $this->get_pk_name($first_table);
 		
 		// N to N table
-		$link_table = $prefix.$parent_table.'_'.$child_table;
+		$link_table = $prefix.$first_table.'_'.$second_table;
 
 		// Correct ambiguous columns
 		$cond = $this->correct_ambiguous_conditions($cond, $link_table);
 
 		$this->db->from($link_table);
 		$this->db->where($cond);
-		$this->db->join($child_table, $child_table.'.'.$child_pk_name.' = '.$link_table.'.'.$child_pk_name);
+
+		if ($join == 2)
+		{
+			$this->db->join($second_table, $second_table.'.'.$second_pk_name.' = '.$link_table.'.'.$second_pk_name);
+		}
+		else
+		{
+			$this->db->join($first_table, $first_table.'.'.$first_pk_name.' = '.$link_table.'.'.$first_pk_name);
+		}
 		
 		$query = $this->db->get();
 
@@ -827,19 +857,22 @@ class Base_model extends Model
 	protected function set_extend_fields_definition($parent)
 	{
 		$CI =& get_instance();
-
-		// Loads the model if it isn't loaded
-		if (!isset($CI->extend_field_model))
-			$CI->load->model('extend_field_model');
-			
-		// Get the extend fields definition if not already got
-		if ($this->got_extend_fields_def == false)
+		
+		if ($CI->db->table_exists('extend_field'))
 		{
-			// Store the extend fields definition
-			$this->extend_fields_def = $CI->extend_field_model->get_list(array('extend_field.parent' => $parent));
-			
-			// Set this to true so we don't get the extend field def a second time for an object of same kind
-			$this->got_extend_fields_def = true;
+			// Loads the model if it isn't loaded
+			if (!isset($CI->extend_field_model))
+				$CI->load->model('extend_field_model');
+				
+			// Get the extend fields definition if not already got
+			if ($this->got_extend_fields_def == false)
+			{
+				// Store the extend fields definition
+				$this->extend_fields_def = $CI->extend_field_model->get_list(array('extend_field.parent' => $parent));
+				
+				// Set this to true so we don't get the extend field def a second time for an object of same kind
+				$this->got_extend_fields_def = true;
+			}
 		}
 	}
 
@@ -1003,7 +1036,7 @@ class Base_model extends Model
 			}
 			
 			$this->db->insert($link_table, $data);
-			
+
 			return TRUE;
 		}
 		
@@ -1121,7 +1154,7 @@ class Base_model extends Model
 		$this->db->select('*, media.id_media');
 		$this->db->from('media,'. $parent .'_media');
 		$this->db->where('media.id_media', $parent.'_media.id_media', false);
-		$this->db->orderby($parent.'_media.ordering');
+		$this->db->order_by($parent.'_media.ordering');
 
 		if ( ! is_null($lang))
 		{
@@ -1144,15 +1177,20 @@ class Base_model extends Model
 		{
 			foreach($data as $k=>$el)
 			{
-				$data[$k]['medias'] = array_values(array_filter($result, create_function('$row','return $row["'.$this->pk_name.'"] == "'. $el[$this->pk_name] .'";')));
+//				$data[$k]['medias'] = array_values(array_filter($result, create_function('$row','return $row["'.$this->pk_name.'"] == "'. $el[$this->pk_name] .'";')));
+				$data[$k]['medias'] = array();
+				foreach($result as $row)
+				{
+					if ($row[$this->pk_name] == $el[$this->pk_name])
+						$data[$k]['medias'][] = $row;
+				}
+				
 				
 				// Add extended fields values for each media
 				// Needs to be improved as the extend fieldsdefinition loaded in $this->extend_fields_def are these from the table and not from the medias...
 				// But this has no importance, it's just not clean.
-//				if (Settings::get('use_extend_fields') == '1' && !empty($data[$k]['medias']))
-//				{
+				if ( ! empty($data[$k]['medias']))
 					$this->add_extend_fields($data[$k]['medias'], 'media', $lang);
-//				}
 				
 				// Add file extension to each media
 				foreach($data[$k]['medias'] as &$media)
@@ -1165,12 +1203,16 @@ class Base_model extends Model
 		// The data array is a hashtable
 		else
 		{
-			$data['medias'] = array_values(array_filter($result, create_function('$row','return $row["'.$this->pk_name.'"] == "'. $data[$this->pk_name] .'";')));
-
-//			if (Settings::get('use_extend_fields') == '1' && !empty($data['medias']))
-//			{
+			// $data['medias'] = array_values(array_filter($result, create_function('$row','return $row["'.$this->pk_name.'"] == "'. $data[$this->pk_name] .'";')));
+			$data['medias'] = array();
+			foreach($result as $row)
+			{
+				if ($row[$this->pk_name] == $data[$this->pk_name])
+					$data['medias'][] = $row;
+			}
+			
+			if ( ! empty($data['medias']))
 				$this->add_extend_fields($data['medias'], 'media', $lang);
-//			}
 			
 			// Add file extension to each media
 			foreach($data['medias'] as &$media)
@@ -1195,36 +1237,53 @@ class Base_model extends Model
 	 */
 	protected function add_lang_urls(&$data, $parent)
 	{
-		// Select medias
-		$this->db->select('id_'.$this->table.','.$this->table.'_lang.lang'.','.$this->table.'_lang.url');
-		$this->db->from($this->table .'_lang');
+		// Element ID
+		$id = 'id_'.$parent;
+		
+		// Array of IDs to get.
+		$ids = array();
+		foreach($data as $element)
+		{
+			$ids[] = $element[$id];
+		}
+		
+		if ( ! empty($ids))
+		{
+			$this->db->select($id .',' .$parent . '_lang.lang,' . $parent . '_lang.url');
+			$this->db->where($id . ' in (' . implode(',' , $ids ) . ')' );
+			$this->db->from($parent . '_lang');
+		
+			$query = $this->db->get();
 	
-		$query = $this->db->get();
-
-		$result = array();
-
-		// Feed each media array
-		if($query->num_rows() > 0)
-		{
-			$result = $query->result_array();
-		}			
-		
-		// If the data array is a list of arrays
-		$languages = Settings::get_languages();
-		
-		if (isset($data[0]) && is_array($data[0]))
-		{
-			foreach($data as $k=>$el)
+			$result = array();
+	
+			// Feed each media array
+			if($query->num_rows() > 0)
+				$result = $query->result_array();
+	
+			$languages = Settings::get_languages();
+			
+			// data must be a list of arrays
+			if (isset($data[0]) && is_array($data[0]))
 			{
-				foreach($languages as $language)
+				foreach($data as $k => $el)
 				{
-					$url = array_values(array_filter($result, create_function('$row','return ($row["id_'.$this->table.'"] == "'. $el['id_'.$this->table] .'" && $row["lang"] == "'.$language['lang'].'");')));
-					$url = (!empty($url[0])) ? $url[0]['url'] : '';
-					$data[$k]['urls'][$language['lang']] = $url;
+					foreach($languages as $language)
+					{
+						foreach($result as $row)
+						{
+							if ($row[$id] == $el[$id] && $row['lang'] == $language['lang'])
+							{
+								$data[$k]['urls'][$row['lang']] = $row['url'];
+							}
+						}
+						// $url = array_values(array_filter($result, create_function('$row','return ($row["id_'.$this->table.'"] == "'. $el['id_'.$this->table] .'" && $row["lang"] == "'.$language['lang'].'");')));
+						// $url = (!empty($url[0])) ? $url[0]['url'] : '';
+						// $data[$k]['urls'][$language['lang']] = $url;
+					}
 				}
 			}
-		}
-	
+		}	
 	}
 
 
@@ -1294,62 +1353,70 @@ class Base_model extends Model
 	 */
 	protected function add_extend_fields(&$data, $parent, $lang = NULL)
 	{	
-		// Check the website settings regarding the extend fields
-//		if (Settings::get('use_extend_fields') == '1')
-//		{
-			// get the extend fields definition array
-			$this->set_extend_fields_definition($this->table);
-			
+		// get the extend fields definition array
+		$this->set_extend_fields_definition($this->table);
+
+		if ($this->db->table_exists('extend_field'))
+		{
 			// Get the elements ID to filter the SQL on...
 			$ids = array();
-			
 			foreach ($data as $d)
 			{
-				$ids[] = $d['id_'.$parent];
+				if ( ! empty($d['id_'.$parent]))
+					$ids[] = $d['id_'.$parent];
 			}
 			
-			// Get the extend fields details, filtered on parents ID
-			$this->db->where(array('extend_field.parent'=>$parent));
-			$this->db->where_in($ids);
-			$this->db->join($this->extend_fields_table, $this->extend_field_table.'.id_'.$this->extend_field_table.' = ' .$this->extend_fields_table.'.id_'.$this->extend_field_table, 'inner');			
-
-			$query = $this->db->get($this->extend_field_table);
-
-			$result = array();
-			if ( $query->num_rows() > 0)
-				$result = $query->result_array();
-			
-			// Filter the result by lang : Only returns the not translated data and the given language translated data
-			$result = array_filter($result,  create_function('$row','return ($row["lang"] == "'. $lang .'" || $row["lang"] == "" );'));
-
-			// Attach each extra field to the corresponding data array
-			foreach ($data as &$d)
+			if ( ! empty($ids))
 			{
-				// Store the extend definition array
-				// Not usefull for the moment.
-				// Can be used for debugging
-				// $d['_extend_fields_definition'] = $this->get_extend_fields_definition();
+				// Get the extend fields details, filtered on parents ID
+				$this->db->where(array('extend_field.parent'=>$parent));
+				$this->db->where_in($ids);
+				$this->db->join($this->extend_fields_table, $this->extend_field_table.'.id_'.$this->extend_field_table.' = ' .$this->extend_fields_table.'.id_'.$this->extend_field_table, 'inner');			
+	
+				$query = $this->db->get($this->extend_field_table);
+	
+				$result = array();
+				if ( $query->num_rows() > 0)
+					$result = $query->result_array();
 				
-				// First set the extended fields of the data row to an empty value. So it exists...
-				foreach ($this->extend_fields_def as $e)
+				// Filter the result by lang : Only returns the not translated data and the given language translated data
+				// $result = array_filter($result,  create_function('$row','return ($row["lang"] == "'. $lang .'" || $row["lang"] == "" );'));
+				$filtered_result = array();
+				foreach($result as $res)
 				{
-					$d[$this->extend_field_prefix.$e['name']] = '';
+					if ($res['lang'] == $lang || $res['lang'] == '' )
+						$filtered_result[] = $res;
 				}
-				
-				// Feeds the extended fields
-				// Each extended field will be prefixed to avoid collision with standard fields names
-				foreach ($result as $e)
+	
+				// Attach each extra field to the corresponding data array
+				foreach ($data as &$d)
 				{
-					if (empty($e['content']) && !empty($e['default_value']))
-						$e['content'] = $e['default_value'];
-				
-					if ($d['id_'.$parent] == $e['id_parent'])
+					// Store the extend definition array
+					// Not usefull for the moment.
+					// Can be used for debugging
+					// $d['_extend_fields_definition'] = $this->get_extend_fields_definition();
+					
+					// First set the extended fields of the data row to an empty value. So it exists...
+					foreach ($this->extend_fields_def as $e)
 					{
-						$d[$this->extend_field_prefix.$e['name']] = $e['content'];
+						$d[$this->extend_field_prefix.$e['name']] = '';
 					}
-				}
-			}			
-//		}
+					
+					// Feeds the extended fields
+					// Each extended field will be prefixed to avoid collision with standard fields names
+					foreach ($result as $e)
+					{
+						if (empty($e['content']) && !empty($e['default_value']))
+							$e['content'] = $e['default_value'];
+					
+						if ($d['id_'.$parent] == $e['id_parent'])
+						{
+							$d[$this->extend_field_prefix.$e['name']] = $e['content'];
+						}
+					}
+				}			
+			}
+		}
 	}
 
 
@@ -1369,7 +1436,7 @@ class Base_model extends Model
 	 *			In that case, the tables ARTICLE and the table CATEGORY MUST exist
 	 *
 	 * @param	string		items table name
-	 * @param	array		items to save. Simple array of keys.
+	 * @param	string/array		items to save. Simple array of keys.
 	 * @param	string		parent table name.
 	 * @param	int			parent ID
 	 *
@@ -1445,8 +1512,10 @@ class Base_model extends Model
 		$fields = $this->db->list_fields($parent_table);
 		$parent_table_pk = $fields[0];
 
-		$this->db->where($parent_table_pk, $parent_id);
-		$this->db->where($items_table_pk, $item_key);
+		$this->db->where(array(
+			$parent_table_pk => $parent_id,
+			$items_table_pk => $item_key
+		));
 
 		return (int) $this->db->delete($link_table);
 	}

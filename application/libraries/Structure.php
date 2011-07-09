@@ -78,7 +78,7 @@ class Structure{
 	 * @param	array	Optional. Articles array
 	 *
 	 */
-	function get_nested_structure(&$data, &$arr, $parent, $startDepth, $maxDepth, $articles=false)
+	function get_nested_structure(&$data, &$arr, $parent, $startDepth, $maxDepth, $articles=FALSE)
 	{
 		if ($maxDepth-- == 0) return;
 		$index = 0;
@@ -86,14 +86,27 @@ class Structure{
 		
 		if (is_array($data))
 		{
-			$children = array_values(array_filter($data, create_function('$row','return $row["id_parent"] == "'. $parent .'";')));
+			// $children = array_values(array_filter($data, create_function('$row','return $row["id_parent"] == "'. $parent .'";')));
+			$children = array();
+			foreach($data as $d)
+			{
+				if ($d['id_parent'] == $parent)
+					$children[] = $d;
+			}
 			
 			foreach ($children as $child)
 			{
 				$arr[$index] = $child;
 
 				if ($articles)
-					$arr[$index]['articles'] = array_values(array_filter($articles, create_function('$row','return $row["id_page"] == "'. $child['id_page'] .'";')));
+				{
+					// $arr[$index]['articles'] = array_values(array_filter($articles, create_function('$row','return $row["id_page"] == "'. $child['id_page'] .'";')));
+					foreach($articles as $article)
+					{
+						if ($article['id_page'] == $child['id_page'])
+							$arr[$index]['articles'][] = $article;
+					}
+				}
 				
 				Structure::get_nested_structure($data, $arr[$index]['children'], $child['id_page'], $startDepth, $maxDepth, $articles);
 				$index++;
@@ -169,7 +182,7 @@ class Structure{
 	// ------------------------------------------------------------------------
 
 	
-	function get_tree_navigation($data, $id_parent, $startDepth=0, $maxDepth=-1)
+	function get_tree_navigation($data, $id_parent, $startDepth=0, $maxDepth=-1, $articles=FALSE)
 	{
 		// Pages array
 		$arr = array();
@@ -177,7 +190,7 @@ class Structure{
 		// Return array
 		$select_data = array();
 		
-		Structure::get_nested_structure($data, $arr, $id_parent, $startDepth, $maxDepth);
+		Structure::get_nested_structure($data, $arr, $id_parent, $startDepth, $maxDepth, $articles);
 		
 		return $arr;
 	
@@ -198,11 +211,17 @@ class Structure{
 		$active_pages = array();
 		
 		// Page data
-		$page = array_values(array_filter($pages, create_function('$row','return $row["id_page"] == "'. $id_page .'";') ));
-
-		if (! empty($page))
+		// $page = array_values(array_filter($pages, create_function('$row','return $row["id_page"] == "'. $id_page .'";') ));
+		$page = array();
+		foreach($pages as $p)
 		{
-			$page = $page[0];
+			if ($p['id_page'] == $id_page)
+				$page = $p;
+		}
+
+		if ( ! empty($page))
+		{
+//			$page = $page[0];
 
 			if ($page['id_parent'] != '0')
 			{

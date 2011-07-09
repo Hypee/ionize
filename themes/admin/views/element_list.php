@@ -54,13 +54,13 @@
 <script type="text/javascript">
 
 // Add toggler to each definition
-$$('#element_definition_<?= $id ?> .toggler').each(function(el)
+$$('li.element_definition span.toggler').each(function(el)
 {
 	ION.initListToggler(el, $('add_def_' + el.getProperty('rel')));
 });
 
 // Plus icon Event
-$$('#element_definition_<?= $id ?> .plus').each(function(item)
+$$('li.element_definition .plus').each(function(item)
 {
 	item.addEvent('click', function(e)
 	{
@@ -70,10 +70,8 @@ $$('#element_definition_<?= $id ?> .plus').each(function(item)
 	});
 });
 
-var windowEl = $('waddContentElement');
-var contentEl = $('waddContentElement_content');
-windowEl.retrieve('instance').resize({height: 300, width: 400});
 
+ION.windowResize('contentElement', {height: 300, width: 400});
 
 
 </script>

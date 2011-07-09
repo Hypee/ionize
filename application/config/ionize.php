@@ -6,27 +6,7 @@
 |--------------------------------------------------------------------------
 |
 */
-$config['version'] = '0.9.7 beta';
-
-
-/*
-|--------------------------------------------------------------------------
-| Ionize Installer protection
-|--------------------------------------------------------------------------
-|
-| NOTICE : Possible security hole, so deactivated.
-|
-| Protects the website from beeing view until the /intall folder is deleted.
-| Default to true.
-|
-| You can change this value once the install folder is deleted.
-|
-| Be careful : With this value to FALSE, the installer AND the website can be reachable
-| at the same time !
-|
-|
-*/
-// $config['protect_installer'] = FALSE;
+$config['version'] = '0.9.7';
 
 
 /* 
@@ -126,6 +106,20 @@ $config['form_antispam_key'] = "yourAntiSpamKey_ShouldContainsNumbersAndChars";
 |
 */
 $config['files_path'] = 'files/';
+
+
+/*
+|--------------------------------------------------------------------------
+| Cache Expiration
+|--------------------------------------------------------------------------
+|
+| Number of minutes you wish the page to remain cached between refreshes.
+| 0 / false : disables the cache system.
+| The cache folder set in config.php in the setting "cache_path" must exists
+| and be writable.
+|
+*/
+$config['cache_expiration'] = 2;
 
 
 /* End of file ionize.php */

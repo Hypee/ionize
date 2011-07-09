@@ -62,10 +62,14 @@ class User extends My_Admin
 	 */
 	function login()
 	{
+		$default_admin_lang = Settings::get_default_admin_lang();
+		
+		$uri_lang = Settings::get_uri_lang();
+
 		// If the user is already logged and if he is in the correct minimum group, go to Admin
 		if($this->connect->logged_in() && $this->connect->is('editors', true))
 		{
-			redirect(site_url(config_item('admin_url')));
+			redirect(base_url().$uri_lang.'/'.config_item('admin_url'));
 		}
 
 		if( ! empty($_POST))
@@ -81,8 +85,7 @@ class User extends My_Admin
 				try
 				{
 					$this->connect->login($_POST);
-
-					redirect(site_url(config_item('admin_url')));
+					redirect(base_url().$uri_lang.'/'.config_item('admin_url'));
 				}
 				catch(Exception $e)
 				{
@@ -91,7 +94,14 @@ class User extends My_Admin
 			}
 			else
 			{
-				$this->login_errors = "Something's wrong appears....";
+				$this->login_errors = lang('ionize_login_error');
+			}
+		}
+		else
+		{
+			if (! in_array($uri_lang, Settings::get('displayed_admin_languages')) OR $uri_lang == config_item('admin_uri')) // && 
+			{
+				redirect(base_url().$default_admin_lang.'/'.config_item('admin_url').'/user/login');
 			}
 		}
 
@@ -116,7 +126,12 @@ class User extends My_Admin
 
         // Here is also the right place to set a flash message or send
         // a screen message to the user if you use the redirect feature.
-    	$this->connect->logout(config_item('admin_url'));
+
+		$default_admin_lang = Settings::get_default_admin_lang();
+		
+		$uri_lang = Settings::get_uri_lang();
+
+    	$this->connect->logout(base_url().$uri_lang.'/'.config_item('admin_url'));
 	}
 
 
@@ -148,6 +163,7 @@ class User extends My_Admin
 
 		return ($this->form_validation->run() === true);
 	}
+	
 }
 
 /* End of file user.php */

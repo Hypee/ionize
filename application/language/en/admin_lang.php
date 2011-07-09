@@ -48,6 +48,7 @@ $lang['ionize_login_remember'] = 'Remember me';
 $lang['ionize_login'] = 'Login';
 $lang['ionize_forgot_password'] = 'Forgotten password ?';
 $lang['ionize_session_expired'] = 'Your session has expired. Please log in again.';
+$lang['ionize_login_error'] = 'Something wrong appears...';
 
 
 /*
@@ -87,6 +88,7 @@ $lang['ionize_button_toggle_header'] = 'Toggle header';
 | Admin navigation menu
 |--------------------------------------------------------------------------
 */
+$lang['ionize_menu_dashboard'] = 'Dashboard';
 $lang['ionize_menu_content'] = 'Content';
 $lang['ionize_menu_articles'] = 'Articles';
 $lang['ionize_menu_translation'] = 'Translations';
@@ -494,6 +496,12 @@ $lang['ionize_title_thumbs_system'] = 'Ionize system thumbnail';
 $lang['ionize_title_form_antispam_key'] = 'Antispam JS key';
 $lang['ionize_title_article_management'] = 'Article management';
 $lang['ionize_title_admin_url'] = 'Admin panel URL';
+$lang['ionize_title_encryption_key'] = 'Encryption key';
+$lang['ionize_title_cache'] = 'Cache System';
+$lang['ionize_title_allowed_mimes'] = 'Allowed Mimes';
+$lang['ionize_label_article_allowed_tags'] = 'Allowed Tags';
+
+
 
 $lang['ionize_label_thumb_automatic'] = 'Automatic';
 $lang['ionize_label_files_path'] = 'Media base folder';
@@ -513,6 +521,9 @@ $lang['ionize_label_db_pass'] = 'Password';
 $lang['ionize_label_google_analytics'] = 'Google Analytics';
 $lang['ionize_label_tinybuttons'] = 'Toolbar TinyMCE';
 $lang['ionize_label_restore_tinybuttons'] = 'Restore TinyMCE default toolbar';
+$lang['ionize_label_tinybuttons'] = 'Toolbar TinyMCE';
+$lang['ionize_label_tinyblockformats'] = 'TinyMCE Format Select';
+$lang['ionize_label_restore_tinyblockformats'] = 'Restore TinyMCE default Format Select';
 
 $lang['ionize_label_smtp_protocol'] = 'Protocol';
 $lang['ionize_label_smtp_host'] = 'Host';
@@ -522,6 +533,11 @@ $lang['ionize_label_smtp_port'] = 'Port';
 $lang['ionize_label_email_charset'] = 'Charset';
 $lang['ionize_label_email_mailtype'] = 'Format';
 $lang['ionize_label_mailpath'] = 'Mail path';
+
+$lang['ionize_label_cache_enabled'] = 'Enabled';
+$lang['ionize_label_cache_expiration'] = 'Time (mins.)';
+$lang['ionize_label_clear_cache'] = 'Clear Cache';
+$lang['ionize_button_clear_cache'] = 'Clear';
 
 $lang['ionize_label_thumb_dir'] = 'Folder';
 $lang['ionize_label_thumb_size'] = 'Size';
@@ -571,6 +587,9 @@ $lang['ionize_message_error_writing_database_file'] = 'application/config/databa
 $lang['ionize_message_error_writing_email_file'] = 'application/config/email.php could not be written !';
 $lang['ionize_message_error_writing_ionize_file'] = 'application/config/ionize.php could not be written !';
 
+$lang['ionize_message_cache_saved'] = 'Cache Settings saved.';
+$lang['ionize_message_cache_cleared'] = 'Cache cleared.';
+
 $lang['ionize_help_setting_google_analytics'] = 'The complete Google script, as copied from the Google Analytics website';
 $lang['ionize_help_setting_files_path'] = 'Indicates the base media folder. Doesn\'t change the physical folder name';
 $lang['ionize_help_setting_system_thumb_list'] = 'Thumbnails displayed by ionize in image list and picture edit window';
@@ -582,6 +601,12 @@ $lang['ionize_help_media_thumb_size'] = 'Size of system thumbnail, in pixels';
 $lang['ionize_help_tinybuttons'] = 'See TinyMCE documentation';
 $lang['ionize_help_setting_picture_max_height'] = 'Picture which exceed these size will be resized during the Upload process.';
 $lang['ionize_help_setting_picture_max_width'] = 'Picture which exceed these size will be resized during the Upload process.';
+$lang['ionize_help_tinyblockformats'] = 'Default TinyMCE Blocks Format (Select)';
+
+$lang['ionize_help_cache_enabled'] = 'Enable / Disable the cache. Disabling it will clear the existing cache.';
+$lang['ionize_help_cache_expiration'] = 'Number of minutes elements will remain cached between refreshes';
+$lang['ionize_help_clear_cache'] = 'Deletes all the cache files.';
+$lang['ionize_help_article_allowed_tags'] = 'Allowed HTML tags in Articles content';
 
 /*
 |--------------------------------------------------------------------------
@@ -613,6 +638,7 @@ $lang['ionize_title_create_page'] = 'Create page';
 $lang['ionize_title_new_page'] = 'New page';
 $lang['ionize_title_edit_page'] = 'Page edit';
 $lang['ionize_title_page_parent'] = 'Parent';
+$lang['ionize_title_sub_navigation'] = 'Navigation';
 
 $lang['ionize_title_help_articles_types'] = 'About Types';
 
@@ -627,6 +653,12 @@ $lang['ionize_label_article_list_template'] = 'List view';
 $lang['ionize_label_page_delete_date'] = 'Page delete date';
 $lang['ionize_label_menu'] = 'Menu';
 $lang['ionize_label_home_page'] = 'Home page';
+$lang['ionize_label_article_reorder'] = 'Reorder Articles';
+$lang['ionize_label_date_asc'] = 'Date Ascendant';
+$lang['ionize_label_date_desc'] = 'Date Descendant';
+$lang['ionize_label_no_sub_navigation'] = '-- No one --';
+
+$lang['ionize_button_reorder'] = 'Reorder';
 
 $lang['ionize_select_default_view'] = '-- Default view --';
 $lang['ionize_select_everyone'] = '-- Everyone --';
@@ -639,6 +671,7 @@ $lang['ionize_message_page_not_exist'] = 'Page don\'t exist';
 $lang['ionize_message_page_ordered'] = 'Page ordered';
 $lang['ionize_message_page_needs_url_or_title'] = 'Please fill title or URL for the default language !';
 $lang['ionize_message_drop_only_article'] = 'Please drop only an article!';
+$lang['ionize_message_articles_ordered'] = 'Articles ordered !';
 
 $lang['ionize_help_page_online'] = 'Is this page online?';
 $lang['ionize_help_page_content_online'] = 'Is this page online for this language?';
@@ -654,6 +687,7 @@ $lang['ionize_help_add_page_to_menu'] = 'Add a page to this menu';
 $lang['ionize_help_page_drop_article_here'] = 'Drag an article from the left tree by selecting its name.';
 $lang['ionize_label_help_articles_types_and_views'] = 'About Types & Views';
 $lang['ionize_label_help_articles_types'] = 'About Types';
+$lang['ionize_label_help_articles_reorder'] = 'Reorder articles by date. Date calculation : Logical or Publish On or Creation.';
 
 /*
 |--------------------------------------------------------------------------
@@ -686,6 +720,7 @@ $lang['ionize_label_link'] = 'Link';
 $lang['ionize_label_description'] = 'Description';
 $lang['ionize_label_reload_media_list'] = 'Reload media list';
 $lang['ionize_label_media_container'] = 'Album / Serie';
+$lang['ionize_label_media_crop_picture'] = 'Crop Picture';
 
 $lang['ionize_message_please_save_first'] = 'Please save before adding media';
 $lang['ionize_message_media_not_authorized'] = 'Media type not authorized !';
@@ -780,6 +815,8 @@ $lang['ionize_message_article_already_linked_to_page'] = 'Article already linked
 $lang['ionize_message_article_linked_to_page'] = 'Article linked to page';
 $lang['ionize_message_article_context_saved'] = 'Article settings saved';
 $lang['ionize_message_article_lang_copied'] = 'Lang data copied. Save please !';
+$lang['ionize_message_article_main_parent_saved'] = 'Main Parent Page saved !';
+
 
 // Inline help
 $lang['ionize_help_article_online'] = 'Is this article online?';
@@ -927,5 +964,29 @@ $lang['ionize_message_module_install_database_error'] = 'Error when installing t
 $lang['ionize_message_module_saved'] = 'Module installed';
 $lang['ionize_message_module_uninstalled'] = 'Module uninstalled';
 $lang['ionize_message_module_not_installed'] = 'Module not installed !';
+
+
+/*
+|--------------------------------------------------------------------------
+| Admin : System Check
+|--------------------------------------------------------------------------
+*/
+$lang['ionize_title_system_check'] = 'System Diagnotic Tool';
+$lang['ionize_menu_system_check'] = 'System Diagnotic';
+$lang['ionize_text_system_check'] = 'These tools check the Ionize integrity and repair what should be. You cannot break anything by using this.';
+
+$lang['ionize_label_start_system_check'] = 'Start Check';
+$lang['ionize_button_start_system_check'] = 'Start Check';
+
+$lang['ionize_title_check_lang'] = 'Check Languages';
+$lang['ionize_title_check_page_level'] = 'Check Pages Levels';
+$lang['ionize_title_check_article_context'] = 'Check Articles Contexts';
+
+$lang['ionize_message_check_corrected'] = ' corrected.';
+$lang['ionize_message_check_ok'] = 'Everything\'s fine.';
+
+
+
+
 
 
